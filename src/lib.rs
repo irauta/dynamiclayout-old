@@ -30,7 +30,6 @@ pub mod primitive_types {
         type Accessor = &'a T;
 
         unsafe fn accessor_from_layout(layout: &'a Self::Layout, bytes: *mut u8) -> Self::Accessor {
-            //unimplemented!();
             &*(bytes.offset(layout.offset as isize) as *mut T)
         }
     }
