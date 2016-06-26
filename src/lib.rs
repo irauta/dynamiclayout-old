@@ -36,6 +36,35 @@ pub mod primitive_types {
     }
 }
 
+pub mod complex_types {
+    use ::{ArrayField,LayoutDynamicField,AccessDynamicField};
+    use ::primitive_types::{Vec2,Vec3,Vec4};
+
+    pub struct Matrix2x<T> (pub T, pub T);
+    pub struct Matrix3x<T> (pub T, pub T, pub T);
+    pub struct Matrix4x<T> (pub T, pub T, pub T, pub T);
+
+    pub type Matrix2 = Matrix2x<Vec2>;
+    pub type Matrix2x3 = Matrix2x<Vec3>;
+    pub type Matrix2x4 = Matrix2x<Vec4>;
+    pub type Matrix3 = Matrix3x<Vec3>;
+    pub type Matrix3x2 = Matrix3x<Vec2>;
+    pub type Matrix3x4 = Matrix3x<Vec4>;
+    pub type Matrix4 = Matrix4x<Vec4>;
+    pub type Matrix4x2 = Matrix4x<Vec2>;
+    pub type Matrix4x3 = Matrix4x<Vec3>;
+
+    pub struct Layout2<T> (pub ArrayField<T>, pub ArrayField<T>);
+    pub struct Layout3<T> (pub ArrayField<T>, pub ArrayField<T>, pub ArrayField<T>);
+    pub struct Layout4<T> (pub ArrayField<T>, pub ArrayField<T>, pub ArrayField<T>, pub ArrayField<T>);
+
+    pub struct Accessor2<'a, T: 'a> (pub &'a T, pub &'a T);
+    pub struct Accessor3<'a, T: 'a> (pub &'a T, pub &'a T, pub &'a T);
+    pub struct Accessor4<'a, T: 'a> (pub &'a T, pub &'a T, pub &'a T, pub &'a T);
+
+
+}
+
 pub struct DynamicField<T> {
     offset: u16,
     phantom: PhantomData<T>
@@ -50,6 +79,21 @@ impl<T> Default for DynamicField<T> {
     }
 }
 
+pub struct ArrayField<T> {
+    offset: u16,
+    stride: u16,
+    phantom: PhantomData<T>
+}
+
+impl<T> Default for ArrayField<T> {
+    fn default() -> Self {
+        ArrayField {
+            offset: 0,
+            stride: 0,
+            phantom: PhantomData
+        }
+    }
+}
 
 pub trait LayoutDynamicField {
     type Layout;
