@@ -67,31 +67,90 @@ pub mod primitive_types {
 
 pub mod complex_types {
     use ::{ArrayField,LayoutDynamicField,AccessDynamicField};
-    use ::primitive_types::{Vec2,Vec3,Vec4};
 
-    pub struct Matrix2x<T> (pub T, pub T);
-    pub struct Matrix3x<T> (pub T, pub T, pub T);
-    pub struct Matrix4x<T> (pub T, pub T, pub T, pub T);
+    #[repr(C, packed)]
+    #[derive(Debug, Copy, Clone)]
+    pub struct Matrix2 (pub (f32, f32), pub (f32, f32));
+    #[repr(C, packed)]
+    #[derive(Debug, Copy, Clone)]
+    pub struct Matrix2x3 (pub (f32, f32, f32), pub (f32, f32, f32));
+    #[repr(C, packed)]
+    #[derive(Debug, Copy, Clone)]
+    pub struct Matrix2x4 (pub (f32, f32, f32, f32), pub (f32, f32, f32, f32));
 
-    pub type Matrix2 = Matrix2x<Vec2>;
-    pub type Matrix2x3 = Matrix2x<Vec3>;
-    pub type Matrix2x4 = Matrix2x<Vec4>;
-    pub type Matrix3 = Matrix3x<Vec3>;
-    pub type Matrix3x2 = Matrix3x<Vec2>;
-    pub type Matrix3x4 = Matrix3x<Vec4>;
-    pub type Matrix4 = Matrix4x<Vec4>;
-    pub type Matrix4x2 = Matrix4x<Vec2>;
-    pub type Matrix4x3 = Matrix4x<Vec3>;
+    impl LayoutDynamicField for Matrix2 { type Layout = Layout2<(f32, f32)>; }
+    impl LayoutDynamicField for Matrix2x3 { type Layout = Layout2<(f32, f32, f32)>; }
+    impl LayoutDynamicField for Matrix2x4 { type Layout = Layout2<(f32, f32, f32, f32)>; }
 
+    #[repr(C, packed)]
+    #[derive(Debug, Copy, Clone)]
+    pub struct Matrix3 (pub (f32, f32, f32), pub (f32, f32, f32), pub (f32, f32, f32));
+    #[repr(C, packed)]
+    #[derive(Debug, Copy, Clone)]
+    pub struct Matrix3x2 (pub (f32, f32), pub (f32, f32), pub (f32, f32));
+    #[repr(C, packed)]
+    #[derive(Debug, Copy, Clone)]
+    pub struct Matrix3x4 (pub (f32, f32, f32, f32), pub (f32, f32, f32, f32), pub (f32, f32, f32, f32));
+
+    impl LayoutDynamicField for Matrix3 { type Layout = Layout3<(f32, f32, f32)>; }
+    impl LayoutDynamicField for Matrix3x2 { type Layout = Layout3<(f32, f32)>; }
+    impl LayoutDynamicField for Matrix3x4 { type Layout = Layout3<(f32, f32, f32, f32)>; }
+
+    #[repr(C, packed)]
+    #[derive(Debug, Copy, Clone)]
+    pub struct Matrix4 (pub (f32, f32, f32, f32), pub (f32, f32, f32, f32), pub (f32, f32, f32, f32), pub (f32, f32, f32, f32));
+    #[repr(C, packed)]
+    #[derive(Debug, Copy, Clone)]
+    pub struct Matrix4x2 (pub (f32, f32), pub (f32, f32), pub (f32, f32), pub (f32, f32));
+    #[repr(C, packed)]
+    #[derive(Debug, Copy, Clone)]
+    pub struct Matrix4x3 (pub (f32, f32, f32), pub (f32, f32, f32), pub (f32, f32, f32), pub (f32, f32, f32));
+
+    impl LayoutDynamicField for Matrix4 { type Layout = Layout4<(f32, f32, f32, f32)>; }
+    impl LayoutDynamicField for Matrix4x2 { type Layout = Layout4<(f32, f32)>; }
+    impl LayoutDynamicField for Matrix4x3 { type Layout = Layout4<(f32, f32, f32)>; }
+
+
+    #[derive(Default)]
     pub struct Layout2<T> (pub ArrayField<T>, pub ArrayField<T>);
+    #[derive(Default)]
     pub struct Layout3<T> (pub ArrayField<T>, pub ArrayField<T>, pub ArrayField<T>);
+    #[derive(Default)]
     pub struct Layout4<T> (pub ArrayField<T>, pub ArrayField<T>, pub ArrayField<T>, pub ArrayField<T>);
 
     pub struct Accessor2<'a, T: 'a> (pub &'a T, pub &'a T);
     pub struct Accessor3<'a, T: 'a> (pub &'a T, pub &'a T, pub &'a T);
     pub struct Accessor4<'a, T: 'a> (pub &'a T, pub &'a T, pub &'a T, pub &'a T);
 
+    // https://www.reddit.com/r/rust/comments/339yj3/tuple_indexing_in_a_macro/
+    macro_rules! expr { ($x:expr) => ($x) }
+    macro_rules! matrix_access_dynamic_field {
+        ($matrix_type:ty : $accessor_type:ident : $field_type:ty : $($field:tt),+) => (
+            impl<'a> AccessDynamicField<'a> for $matrix_type {
+                type Accessor = $accessor_type<'a, $field_type>;
 
+                unsafe fn accessor_from_layout(layout: &'a Self::Layout, bytes: *mut u8) -> Self::Accessor {
+                    $accessor_type (
+                        $( &mut *(expr!(layout.$field).offset_ptr(bytes, expr!($field)) as *mut $field_type) ),+
+                    )
+                }
+            }
+        );
+
+        (tuple_workaround $x:expr) => ($x);
+    }
+
+    matrix_access_dynamic_field!(Matrix2 : Accessor2 : (f32, f32) : 0, 1);
+    matrix_access_dynamic_field!(Matrix2x3 : Accessor2 : (f32, f32, f32) : 0, 1);
+    matrix_access_dynamic_field!(Matrix2x4 : Accessor2 : (f32, f32, f32, f32) : 0, 1);
+
+    matrix_access_dynamic_field!(Matrix3x2 : Accessor3 : (f32, f32) : 0, 1, 2);
+    matrix_access_dynamic_field!(Matrix3 : Accessor3 : (f32, f32, f32) : 0, 1, 2);
+    matrix_access_dynamic_field!(Matrix3x4 : Accessor3 : (f32, f32, f32, f32) : 0, 1, 2);
+
+    matrix_access_dynamic_field!(Matrix4x2 : Accessor4 : (f32, f32) : 0, 1, 2, 3);
+    matrix_access_dynamic_field!(Matrix4x3 : Accessor4 : (f32, f32, f32) : 0, 1, 2, 3);
+    matrix_access_dynamic_field!(Matrix4 : Accessor4 : (f32, f32, f32, f32) : 0, 1, 2, 3);
 }
 
 pub struct DynamicField<T> {
@@ -192,6 +251,7 @@ macro_rules! dynamiclayout {
 #[cfg(test)]
 mod tests {
     use ::primitive_types::{Vec2,Vec3,Vec4};
+    use ::complex_types::Matrix4;
 
     #[repr(C, packed)]
     #[derive(Debug, Copy, Clone)]
@@ -208,6 +268,7 @@ mod tests {
     pub struct Bar {
         pub one: f32,
         pub four: Vec4,
+        pub matrix: Matrix4
     }
 
     dynamiclayout!(FooLayout + FooAccessor {
@@ -220,7 +281,8 @@ mod tests {
 
     dynamiclayout!(BarLayout + BarAccessor {
         one: f32,
-        four: Vec4
+        four: Vec4,
+        matrix: Matrix4
     });
 
     fn make_foo_layout() -> FooLayout {
@@ -237,6 +299,14 @@ mod tests {
         let mut layout: BarLayout = Default::default();
         layout.one.offset = 40;
         layout.four.offset = 44;
+        layout.matrix.0.offset = 60;
+        layout.matrix.0.stride = 16;
+        layout.matrix.1.offset = 60;
+        layout.matrix.1.stride = 16;
+        layout.matrix.2.offset = 60;
+        layout.matrix.2.stride = 16;
+        layout.matrix.3.offset = 60;
+        layout.matrix.3.stride = 16;
         layout
     }
 
@@ -247,7 +317,16 @@ mod tests {
             one: 4.0,
             four: Vec4 (5.0, 6.0, 7.0, 8.0),
             two: Vec2 (9.0, 10.0),
-            compound: Bar { one: 11.0, four: Vec4 (12.0, 13.0, 14.0, 15.0) }
+            compound: Bar {
+                one: 11.0,
+                four: Vec4 (12.0, 13.0, 14.0, 15.0),
+                matrix: Matrix4 (
+                    (101.0, 102.0, 103.0, 104.0),
+                    (105.0, 106.0, 107.0, 108.0),
+                    (109.0, 110.0, 111.0, 112.0),
+                    (113.0, 114.0, 115.0, 116.0)
+                )
+            }
         }
     }
 
@@ -256,7 +335,7 @@ mod tests {
         let layout = make_foo_layout();
         let foo = new_foo();
 
-        let mut bytes: [u8; 60] = unsafe { ::std::mem::transmute(foo) };
+        let mut bytes: [u8; 124] = unsafe { ::std::mem::transmute(foo) };
 
         let acc = layout.accessor(&mut bytes);
 
@@ -279,5 +358,22 @@ mod tests {
         assert_eq!(foo.compound.four.1, acc.compound.four.1);
         assert_eq!(foo.compound.four.2, acc.compound.four.2);
         assert_eq!(foo.compound.four.3, acc.compound.four.3);
+
+        assert_eq!( (foo.compound.matrix.0).0, (acc.compound.matrix.0).0 );
+        assert_eq!( (foo.compound.matrix.0).1, (acc.compound.matrix.0).1 );
+        assert_eq!( (foo.compound.matrix.0).2, (acc.compound.matrix.0).2 );
+        assert_eq!( (foo.compound.matrix.0).3, (acc.compound.matrix.0).3 );
+        assert_eq!( (foo.compound.matrix.1).0, (acc.compound.matrix.1).0 );
+        assert_eq!( (foo.compound.matrix.1).1, (acc.compound.matrix.1).1 );
+        assert_eq!( (foo.compound.matrix.1).2, (acc.compound.matrix.1).2 );
+        assert_eq!( (foo.compound.matrix.1).3, (acc.compound.matrix.1).3 );
+        assert_eq!( (foo.compound.matrix.2).0, (acc.compound.matrix.2).0 );
+        assert_eq!( (foo.compound.matrix.2).1, (acc.compound.matrix.2).1 );
+        assert_eq!( (foo.compound.matrix.2).2, (acc.compound.matrix.2).2 );
+        assert_eq!( (foo.compound.matrix.2).3, (acc.compound.matrix.2).3 );
+        assert_eq!( (foo.compound.matrix.3).0, (acc.compound.matrix.3).0 );
+        assert_eq!( (foo.compound.matrix.3).1, (acc.compound.matrix.3).1 );
+        assert_eq!( (foo.compound.matrix.3).2, (acc.compound.matrix.3).2 );
+        assert_eq!( (foo.compound.matrix.3).3, (acc.compound.matrix.3).3 );
     }
 }
