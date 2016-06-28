@@ -60,7 +60,7 @@ pub mod primitive_types {
         type Accessor = &'a T;
 
         unsafe fn accessor_from_layout(layout: &'a Self::Layout, bytes: *mut u8) -> Self::Accessor {
-            &*(bytes.offset(layout.offset as isize) as *mut T)
+            &*(layout.offset_ptr(bytes) as *mut T)
         }
     }
 }
@@ -99,6 +99,12 @@ pub struct DynamicField<T> {
     phantom: PhantomData<T>
 }
 
+impl<T> DynamicField<T> {
+    pub unsafe fn offset_ptr(&self, ptr: *mut u8) -> *mut u8 {
+        ptr.offset(self.offset as isize)
+    }
+}
+
 impl<T> Default for DynamicField<T> {
     fn default() -> Self {
         DynamicField {
@@ -112,6 +118,13 @@ pub struct ArrayField<T> {
     offset: u16,
     stride: u16,
     phantom: PhantomData<T>
+}
+
+impl<T> ArrayField<T> {
+    pub unsafe fn offset_ptr(&self, ptr: *mut u8, index: u16) -> *mut u8 {
+        let total_offset: isize = self.offset as isize + self.stride as isize * index as isize;
+        ptr.offset(total_offset)
+    }
 }
 
 impl<T> Default for ArrayField<T> {
