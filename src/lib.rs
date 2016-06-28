@@ -9,11 +9,35 @@ pub mod primitive_types {
 
     #[repr(C, packed)]
     #[derive(Debug, Copy, Clone)]
+    pub struct IVec2 (pub i32, pub i32);
+
+    #[repr(C, packed)]
+    #[derive(Debug, Copy, Clone)]
+    pub struct UVec2 (pub u32, pub u32);
+
+    #[repr(C, packed)]
+    #[derive(Debug, Copy, Clone)]
     pub struct Vec3 (pub f32, pub f32, pub f32);
 
     #[repr(C, packed)]
     #[derive(Debug, Copy, Clone)]
+    pub struct IVec3 (pub i32, pub i32, pub i32);
+
+    #[repr(C, packed)]
+    #[derive(Debug, Copy, Clone)]
+    pub struct UVec3 (pub u32, pub u32, pub u32);
+
+    #[repr(C, packed)]
+    #[derive(Debug, Copy, Clone)]
     pub struct Vec4 (pub f32, pub f32, pub f32, pub f32);
+
+    #[repr(C, packed)]
+    #[derive(Debug, Copy, Clone)]
+    pub struct IVec4 (pub i32, pub i32, pub i32, pub i32);
+
+    #[repr(C, packed)]
+    #[derive(Debug, Copy, Clone)]
+    pub struct UVec4 (pub u32, pub u32, pub u32, pub u32);
 
     pub trait PrimitiveType: Copy {}
     impl PrimitiveType for f32 {}
@@ -22,6 +46,12 @@ pub mod primitive_types {
     impl PrimitiveType for Vec2 {}
     impl PrimitiveType for Vec3 {}
     impl PrimitiveType for Vec4 {}
+    impl PrimitiveType for IVec2 {}
+    impl PrimitiveType for IVec3 {}
+    impl PrimitiveType for IVec4 {}
+    impl PrimitiveType for UVec2 {}
+    impl PrimitiveType for UVec3 {}
+    impl PrimitiveType for UVec4 {}
 
     impl<T: PrimitiveType> ::LayoutDynamicField for T {
         type Layout = ::DynamicField<T>;
