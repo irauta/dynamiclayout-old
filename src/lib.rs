@@ -1,7 +1,4 @@
 
-use std::default::Default;
-use std::marker::PhantomData;
-
 pub mod primitive_types {
     #[repr(C, packed)]
     #[derive(Debug, Copy, Clone)]
@@ -54,7 +51,7 @@ pub mod primitive_types {
     impl PrimitiveType for UVec4 {}
 
     impl<T: PrimitiveType> ::LayoutDynamicField for T {
-        type Layout = ::DynamicField<T>;
+        type Layout = ::DynamicField;
     }
     impl<'a, T: 'a + PrimitiveType> ::AccessDynamicField<'a> for T {
         type Accessor = &'a T;
@@ -96,7 +93,7 @@ pub mod complex_types {
             }
 
             impl LayoutDynamicField for $matrix_type {
-                type Layout = ArrayField<$matrix_type>;
+                type Layout = ArrayField;
             }
 
             impl<'a> AccessDynamicField<'a> for $matrix_type {
@@ -124,48 +121,30 @@ pub mod complex_types {
     make_matrix_type!(Matrix4 [4][4] 0, 1, 2, 3);
 }
 
-pub struct DynamicField<T> {
-    offset: u16,
-    phantom: PhantomData<T>
+#[derive(Default)]
+pub struct DynamicField {
+    offset: u16
 }
 
-impl<T> DynamicField<T> {
+impl DynamicField {
     pub unsafe fn offset_ptr(&self, ptr: *mut u8) -> *mut u8 {
         ptr.offset(self.offset as isize)
     }
 }
 
-impl<T> Default for DynamicField<T> {
-    fn default() -> Self {
-        DynamicField {
-            offset: 0,
-            phantom: PhantomData
-        }
-    }
-}
-
-pub struct ArrayField<T> {
+#[derive(Default)]
+pub struct ArrayField {
     offset: u16,
-    stride: u16,
-    phantom: PhantomData<T>
+    stride: u16
 }
 
-impl<T> ArrayField<T> {
+impl ArrayField {
     pub unsafe fn offset_ptr(&self, ptr: *mut u8, index: u16) -> *mut u8 {
         let total_offset: isize = self.offset as isize + self.stride as isize * index as isize;
         ptr.offset(total_offset)
     }
 }
 
-impl<T> Default for ArrayField<T> {
-    fn default() -> Self {
-        ArrayField {
-            offset: 0,
-            stride: 0,
-            phantom: PhantomData
-        }
-    }
-}
 
 pub trait LayoutDynamicField {
     type Layout;
