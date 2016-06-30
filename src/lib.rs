@@ -5,39 +5,39 @@ use std::marker::PhantomData;
 pub mod primitive_types {
     #[repr(C, packed)]
     #[derive(Debug, Copy, Clone)]
-    pub struct Vec2 (pub f32, pub f32);
+    pub struct Vec2 { pub x: f32, pub y: f32 }
 
     #[repr(C, packed)]
     #[derive(Debug, Copy, Clone)]
-    pub struct IVec2 (pub i32, pub i32);
+    pub struct IVec2 { pub x: i32, pub y: i32 }
 
     #[repr(C, packed)]
     #[derive(Debug, Copy, Clone)]
-    pub struct UVec2 (pub u32, pub u32);
+    pub struct UVec2 { pub x: u32, pub y: u32 }
 
     #[repr(C, packed)]
     #[derive(Debug, Copy, Clone)]
-    pub struct Vec3 (pub f32, pub f32, pub f32);
+    pub struct Vec3 { pub x: f32, pub y: f32, pub z: f32 }
 
     #[repr(C, packed)]
     #[derive(Debug, Copy, Clone)]
-    pub struct IVec3 (pub i32, pub i32, pub i32);
+    pub struct IVec3 { pub x: i32, pub y: i32, pub z: i32 }
 
     #[repr(C, packed)]
     #[derive(Debug, Copy, Clone)]
-    pub struct UVec3 (pub u32, pub u32, pub u32);
+    pub struct UVec3 { pub x: u32, pub y: u32, pub z: u32 }
 
     #[repr(C, packed)]
     #[derive(Debug, Copy, Clone)]
-    pub struct Vec4 (pub f32, pub f32, pub f32, pub f32);
+    pub struct Vec4 { pub x: f32, pub y: f32, pub z: f32, pub w: f32 }
 
     #[repr(C, packed)]
     #[derive(Debug, Copy, Clone)]
-    pub struct IVec4 (pub i32, pub i32, pub i32, pub i32);
+    pub struct IVec4 { pub x: i32, pub y: i32, pub z: i32, pub w: i32 }
 
     #[repr(C, packed)]
     #[derive(Debug, Copy, Clone)]
-    pub struct UVec4 (pub u32, pub u32, pub u32, pub u32);
+    pub struct UVec4 { pub x: u32, pub y: u32, pub z: u32, pub w: u32 }
 
     pub trait PrimitiveType: Copy {}
     impl PrimitiveType for f32 {}
@@ -313,13 +313,13 @@ mod tests {
     fn new_foo() -> Foo {
         use ::primitive_types::*;
         Foo {
-            three: Vec3 (1.0, 2.0, 3.0),
+            three: Vec3 { x: 1.0, y: 2.0, z: 3.0 },
             one: 4.0,
-            four: Vec4 (5.0, 6.0, 7.0, 8.0),
-            two: Vec2 (9.0, 10.0),
+            four: Vec4 { x: 5.0, y: 6.0, z: 7.0, w: 8.0 },
+            two: Vec2 { x: 9.0, y: 10.0 },
             compound: Bar {
                 one: 11.0,
-                four: Vec4 (12.0, 13.0, 14.0, 15.0),
+                four: Vec4 { x: 12.0, y: 13.0, z: 14.0, w: 15.0 },
                 matrix: Matrix4 (
                     (101.0, 102.0, 103.0, 104.0),
                     (105.0, 106.0, 107.0, 108.0),
@@ -339,25 +339,25 @@ mod tests {
 
         let acc = layout.accessor(&mut bytes);
 
-        assert_eq!(foo.three.0, acc.three.0);
-        assert_eq!(foo.three.1, acc.three.1);
-        assert_eq!(foo.three.2, acc.three.2);
+        assert_eq!(foo.three.x, acc.three.x);
+        assert_eq!(foo.three.y, acc.three.y);
+        assert_eq!(foo.three.z, acc.three.z);
 
         assert_eq!(foo.one, *acc.one);
 
-        assert_eq!(foo.four.0, acc.four.0);
-        assert_eq!(foo.four.1, acc.four.1);
-        assert_eq!(foo.four.2, acc.four.2);
-        assert_eq!(foo.four.3, acc.four.3);
+        assert_eq!(foo.four.x, acc.four.x);
+        assert_eq!(foo.four.y, acc.four.y);
+        assert_eq!(foo.four.z, acc.four.z);
+        assert_eq!(foo.four.w, acc.four.w);
 
-        assert_eq!(foo.two.0, acc.two.0);
-        assert_eq!(foo.two.1, acc.two.1);
+        assert_eq!(foo.two.x, acc.two.x);
+        assert_eq!(foo.two.y, acc.two.y);
 
         assert_eq!(foo.compound.one, *acc.compound.one);
-        assert_eq!(foo.compound.four.0, acc.compound.four.0);
-        assert_eq!(foo.compound.four.1, acc.compound.four.1);
-        assert_eq!(foo.compound.four.2, acc.compound.four.2);
-        assert_eq!(foo.compound.four.3, acc.compound.four.3);
+        assert_eq!(foo.compound.four.x, acc.compound.four.x);
+        assert_eq!(foo.compound.four.y, acc.compound.four.y);
+        assert_eq!(foo.compound.four.z, acc.compound.four.z);
+        assert_eq!(foo.compound.four.w, acc.compound.four.w);
 
         assert_eq!( (foo.compound.matrix.0).0, (acc.compound.matrix.0).0 );
         assert_eq!( (foo.compound.matrix.0).1, (acc.compound.matrix.0).1 );
