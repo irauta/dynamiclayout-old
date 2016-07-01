@@ -5,10 +5,10 @@ macro_rules! impl_primitive_accessor {
             type Layout = ::DynamicField;
         }
         impl<'a> ::AccessDynamicField<'a> for $primitive_type {
-            type Accessor = &'a $primitive_type;
+            type Accessor = &'a mut $primitive_type;
 
             unsafe fn accessor_from_layout(layout: &'a Self::Layout, bytes: *mut u8) -> Self::Accessor {
-                &*(layout.offset_ptr(bytes) as *mut $primitive_type)
+                &mut *(layout.offset_ptr(bytes) as *mut $primitive_type)
             }
         }
 
@@ -284,11 +284,12 @@ mod tests {
     }
 
     #[test]
-    fn it_works() {
+    fn one_to_one_mapping() {
         let layout = make_foo_layout();
-        let foo = new_foo();
+        let mut foo = new_foo();
 
-        let mut bytes: [u8; 124] = unsafe { ::std::mem::transmute(foo) };
+        assert_eq!(124, ::std::mem::size_of_val(&foo));
+        let mut bytes: &mut [u8] = unsafe { &mut *(&mut foo as *mut Foo as *mut [u8; 124]) };
 
         let acc = layout.accessor(&mut bytes);
 
@@ -328,6 +329,13 @@ mod tests {
         assert_eq!( foo.compound.matrix[3][1], acc.compound.matrix[3][1] );
         assert_eq!( foo.compound.matrix[3][2], acc.compound.matrix[3][2] );
         assert_eq!( foo.compound.matrix[3][3], acc.compound.matrix[3][3] );
+
+        acc.three.y = 999.0;
+        assert_eq!(foo.three.y, 999.0);
+        acc.two[0] = 888.0;
+        assert_eq!(foo.two.x, 888.0);
+        *acc.one = 777.0;
+        assert_eq!(foo.one, 777.0);
     }
 
     #[test]
