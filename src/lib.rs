@@ -1,65 +1,57 @@
 
 pub mod primitive_types {
-    #[repr(C, packed)]
-    #[derive(Debug, Copy, Clone)]
-    pub struct Vec2 { pub x: f32, pub y: f32 }
 
-    #[repr(C, packed)]
-    #[derive(Debug, Copy, Clone)]
-    pub struct IVec2 { pub x: i32, pub y: i32 }
+    macro_rules! make_vector_type {
+        ($vector_type:ident : $field_type:ty [$field_count:expr] $($field:ident),+) => (
+            #[repr(C, packed)]
+            #[derive(Debug, Copy, Clone)]
+            pub struct $vector_type {
+                $( pub $field: $field_type ),+
+            }
 
-    #[repr(C, packed)]
-    #[derive(Debug, Copy, Clone)]
-    pub struct UVec2 { pub x: u32, pub y: u32 }
+            impl $vector_type {
+                pub fn new( $( $field: $field_type ),+ ) -> $vector_type {
+                    $vector_type {
+                        $( $field: $field ),+
+                    }
+                }
+            }
 
-    #[repr(C, packed)]
-    #[derive(Debug, Copy, Clone)]
-    pub struct Vec3 { pub x: f32, pub y: f32, pub z: f32 }
-
-    #[repr(C, packed)]
-    #[derive(Debug, Copy, Clone)]
-    pub struct IVec3 { pub x: i32, pub y: i32, pub z: i32 }
-
-    #[repr(C, packed)]
-    #[derive(Debug, Copy, Clone)]
-    pub struct UVec3 { pub x: u32, pub y: u32, pub z: u32 }
-
-    #[repr(C, packed)]
-    #[derive(Debug, Copy, Clone)]
-    pub struct Vec4 { pub x: f32, pub y: f32, pub z: f32, pub w: f32 }
-
-    #[repr(C, packed)]
-    #[derive(Debug, Copy, Clone)]
-    pub struct IVec4 { pub x: i32, pub y: i32, pub z: i32, pub w: i32 }
-
-    #[repr(C, packed)]
-    #[derive(Debug, Copy, Clone)]
-    pub struct UVec4 { pub x: u32, pub y: u32, pub z: u32, pub w: u32 }
-
-    pub trait PrimitiveType: Copy {}
-    impl PrimitiveType for f32 {}
-    impl PrimitiveType for i32 {}
-    impl PrimitiveType for u32 {}
-    impl PrimitiveType for Vec2 {}
-    impl PrimitiveType for Vec3 {}
-    impl PrimitiveType for Vec4 {}
-    impl PrimitiveType for IVec2 {}
-    impl PrimitiveType for IVec3 {}
-    impl PrimitiveType for IVec4 {}
-    impl PrimitiveType for UVec2 {}
-    impl PrimitiveType for UVec3 {}
-    impl PrimitiveType for UVec4 {}
-
-    impl<T: PrimitiveType> ::LayoutDynamicField for T {
-        type Layout = ::DynamicField;
+            impl_primitive_accessor!($vector_type);
+        )
     }
-    impl<'a, T: 'a + PrimitiveType> ::AccessDynamicField<'a> for T {
-        type Accessor = &'a T;
 
-        unsafe fn accessor_from_layout(layout: &'a Self::Layout, bytes: *mut u8) -> Self::Accessor {
-            &*(layout.offset_ptr(bytes) as *mut T)
-        }
+    macro_rules! impl_primitive_accessor {
+        ($primitive_type:ty) => (
+            impl ::LayoutDynamicField for $primitive_type {
+                type Layout = ::DynamicField;
+            }
+            impl<'a> ::AccessDynamicField<'a> for $primitive_type {
+                type Accessor = &'a $primitive_type;
+
+                unsafe fn accessor_from_layout(layout: &'a Self::Layout, bytes: *mut u8) -> Self::Accessor {
+                    &*(layout.offset_ptr(bytes) as *mut $primitive_type)
+                }
+            }
+
+        )
     }
+
+    make_vector_type!(Vec2: f32 [2] x, y);
+    make_vector_type!(IVec2: i32 [2] x, y);
+    make_vector_type!(UVec2: u32 [2] x, y);
+
+    make_vector_type!(Vec3: f32 [3] x, y, z);
+    make_vector_type!(IVec3: i32 [3] x, y, z);
+    make_vector_type!(UVec3: u32 [3] x, y, z);
+
+    make_vector_type!(Vec4: f32 [4] x, y, z, w);
+    make_vector_type!(IVec4: i32 [4] x, y, z, w);
+    make_vector_type!(UVec4: u32 [4] x, y, z, w);
+
+    impl_primitive_accessor!(f32);
+    impl_primitive_accessor!(i32);
+    impl_primitive_accessor!(u32);
 }
 
 pub mod complex_types {
