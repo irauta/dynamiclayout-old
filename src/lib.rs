@@ -20,6 +20,7 @@ impl_primitive_accessor!(i32);
 impl_primitive_accessor!(u32);
 
 pub mod vector_types {
+    use std::ops::{Index,IndexMut};
 
     macro_rules! make_vector_type {
         ($vector_type:ident : $field_type:ty [$field_count:expr] $($field:ident),+) => (
@@ -34,6 +35,22 @@ pub mod vector_types {
                     $vector_type {
                         $( $field: $field ),+
                     }
+                }
+            }
+
+            impl Index<usize> for $vector_type {
+                type Output = $field_type;
+
+                fn index(&self, index: usize) -> &Self::Output {
+                    let array = unsafe { &*(self as *const Self as *const [$field_type; $field_count]) };
+                    &array[index]
+                }
+            }
+
+            impl IndexMut<usize> for $vector_type {
+                fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+                    let array = unsafe { &mut *(self as *mut Self as *mut [$field_type; $field_count]) };
+                    &mut array[index]
                 }
             }
 
@@ -311,5 +328,23 @@ mod tests {
         assert_eq!( foo.compound.matrix[3][1], acc.compound.matrix[3][1] );
         assert_eq!( foo.compound.matrix[3][2], acc.compound.matrix[3][2] );
         assert_eq!( foo.compound.matrix[3][3], acc.compound.matrix[3][3] );
+    }
+
+    #[test]
+    fn vector_indexing() {
+        let vec = Vec4::new(1.0, 2.0, 3.0, 4.0);
+
+        assert_eq!(vec[0], 1.0);
+        assert_eq!(vec[1], 2.0);
+        assert_eq!(vec[2], 3.0);
+        assert_eq!(vec[3], 4.0);
+    }
+
+    #[test]
+    #[should_panic]
+    fn vector_out_of_bounds() {
+        let vec = Vec3::new(1.0, 2.0, 3.0);
+
+        vec[4];
     }
 }
