@@ -89,8 +89,9 @@ fn one_to_one_mapping() {
     let layout = make_foo_layout();
     let mut foo = new_foo();
 
-    assert_eq!(124, ::std::mem::size_of_val(&foo));
-    let mut bytes: &mut [u8] = unsafe { &mut *(&mut foo as *mut Foo as *mut [u8; 124]) };
+    const FOO_SIZE: usize = 124;
+    assert_eq!(FOO_SIZE, ::std::mem::size_of_val(&foo));
+    let mut bytes: &mut [u8] = unsafe { &mut *(&mut foo as *mut Foo as *mut [u8; FOO_SIZE]) };
 
     let acc = layout.accessor(&mut bytes);
 
