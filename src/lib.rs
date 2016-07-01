@@ -1,5 +1,25 @@
 
-pub mod primitive_types {
+macro_rules! impl_primitive_accessor {
+    ($primitive_type:ty) => (
+        impl ::LayoutDynamicField for $primitive_type {
+            type Layout = ::DynamicField;
+        }
+        impl<'a> ::AccessDynamicField<'a> for $primitive_type {
+            type Accessor = &'a $primitive_type;
+
+            unsafe fn accessor_from_layout(layout: &'a Self::Layout, bytes: *mut u8) -> Self::Accessor {
+                &*(layout.offset_ptr(bytes) as *mut $primitive_type)
+            }
+        }
+
+    )
+}
+
+impl_primitive_accessor!(f32);
+impl_primitive_accessor!(i32);
+impl_primitive_accessor!(u32);
+
+pub mod vector_types {
 
     macro_rules! make_vector_type {
         ($vector_type:ident : $field_type:ty [$field_count:expr] $($field:ident),+) => (
@@ -21,22 +41,6 @@ pub mod primitive_types {
         )
     }
 
-    macro_rules! impl_primitive_accessor {
-        ($primitive_type:ty) => (
-            impl ::LayoutDynamicField for $primitive_type {
-                type Layout = ::DynamicField;
-            }
-            impl<'a> ::AccessDynamicField<'a> for $primitive_type {
-                type Accessor = &'a $primitive_type;
-
-                unsafe fn accessor_from_layout(layout: &'a Self::Layout, bytes: *mut u8) -> Self::Accessor {
-                    &*(layout.offset_ptr(bytes) as *mut $primitive_type)
-                }
-            }
-
-        )
-    }
-
     make_vector_type!(Vec2: f32 [2] x, y);
     make_vector_type!(IVec2: i32 [2] x, y);
     make_vector_type!(UVec2: u32 [2] x, y);
@@ -49,12 +53,9 @@ pub mod primitive_types {
     make_vector_type!(IVec4: i32 [4] x, y, z, w);
     make_vector_type!(UVec4: u32 [4] x, y, z, w);
 
-    impl_primitive_accessor!(f32);
-    impl_primitive_accessor!(i32);
-    impl_primitive_accessor!(u32);
 }
 
-pub mod complex_types {
+pub mod matrix_types {
     use std::ops::{Index,IndexMut};
     use ::{ArrayField,LayoutDynamicField,AccessDynamicField};
 
@@ -192,8 +193,8 @@ macro_rules! dynamiclayout {
 
 #[cfg(test)]
 mod tests {
-    use ::primitive_types::{Vec2,Vec3,Vec4};
-    use ::complex_types::Matrix4;
+    use ::vector_types::{Vec2,Vec3,Vec4};
+    use ::matrix_types::Matrix4;
 
     #[repr(C, packed)]
     #[derive(Debug, Copy, Clone)]
@@ -247,7 +248,6 @@ mod tests {
     }
 
     fn new_foo() -> Foo {
-        use ::primitive_types::*;
         Foo {
             three: Vec3 { x: 1.0, y: 2.0, z: 3.0 },
             one: 4.0,
