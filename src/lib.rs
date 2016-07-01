@@ -107,7 +107,7 @@ pub mod matrix_types {
             }
 
             impl<'a> AccessDynamicField<'a> for $matrix_type {
-                type Accessor = [&'a [f32; $row_count]; $column_count];
+                type Accessor = [&'a mut [f32; $row_count]; $column_count];
 
                 unsafe fn accessor_from_layout(layout: &'a Self::Layout, bytes: *mut u8) -> Self::Accessor {
                     [
@@ -343,8 +343,54 @@ mod tests {
     #[test]
     #[should_panic]
     fn vector_out_of_bounds() {
-        let vec = Vec3::new(1.0, 2.0, 3.0);
+        let mut vec = Vec3::new(1.0, 2.0, 3.0);
+        vec[4] = 4.0;
+    }
 
-        vec[4];
+    dynamiclayout!(MatrixLayout + MatrixAccessor {
+        matrix: Matrix4
+    });
+
+    const MATRIX: [[f32; 4]; 4] = [[0.0f32; 4]; 4];
+
+    fn matrix_bytes() -> [u8; 64] {
+        unsafe { ::std::mem::transmute(MATRIX) }
+    }
+
+    fn matrix_layout() -> MatrixLayout {
+        let mut layout: MatrixLayout = Default::default();
+        layout.matrix.offset = 0;
+        layout.matrix.stride = 16;
+        layout
+    }
+
+    #[test]
+    fn dynamic_matrix_indexing() {
+        let layout = matrix_layout();
+        let mut bytes = matrix_bytes();
+        let mut acc = layout.accessor(&mut bytes);
+        assert_eq!(acc.matrix[0][0], 0.0);
+        assert_eq!(acc.matrix[3][3], 0.0);
+        acc.matrix[2][2] = 5.0;
+    }
+
+    #[test]
+    #[should_panic]
+    fn dynamic_matrix_out_of_bounds_1() {
+        let layout = matrix_layout();
+        let mut bytes = matrix_bytes();
+        let mut acc = layout.accessor(&mut bytes);
+        // Cause panic when accessing the outer array
+        acc.matrix[4][0] = 1.0;
+    }
+
+    #[test]
+    #[should_panic]
+    fn dynamic_matrix_out_of_bounds_2() {
+        let layout = matrix_layout();
+        let mut bytes = matrix_bytes();
+        let mut acc = layout.accessor(&mut bytes);
+        // Cause panic when accessing the nested array
+        acc.matrix[0][4] = 1.0;
     }
 }
