@@ -1,6 +1,6 @@
 
-use std::ops::{Index,IndexMut};
-use ::{ArrayField,LayoutDynamicField,AccessDynamicField};
+use std::ops::{Index, IndexMut};
+use {ArrayField, LayoutDynamicField, AccessDynamicField};
 
 macro_rules! make_matrix_type {
     ($matrix_type:ident [$column_count:expr][$row_count:expr] $($field:expr),+) => (

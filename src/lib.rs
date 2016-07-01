@@ -26,7 +26,7 @@ pub mod matrix_types;
 
 #[derive(Default)]
 pub struct DynamicField {
-    offset: u16
+    offset: u16,
 }
 
 impl DynamicField {
@@ -38,7 +38,7 @@ impl DynamicField {
 #[derive(Default)]
 pub struct ArrayField {
     offset: u16,
-    stride: u16
+    stride: u16,
 }
 
 impl ArrayField {

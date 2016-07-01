@@ -1,5 +1,5 @@
 
-use std::ops::{Index,IndexMut};
+use std::ops::{Index, IndexMut};
 
 macro_rules! make_vector_type {
     ($vector_type:ident : $field_type:ty [$field_count:expr] $($field:ident),+) => (

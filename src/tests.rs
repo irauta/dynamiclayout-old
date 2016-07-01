@@ -1,6 +1,6 @@
 
-use ::vector_types::{Vec2,Vec3,Vec4};
-use ::matrix_types::Matrix4;
+use vector_types::{Vec2, Vec3, Vec4};
+use matrix_types::Matrix4;
 
 #[repr(C, packed)]
 #[derive(Debug, Copy, Clone)]
@@ -9,7 +9,7 @@ pub struct Foo {
     pub one: f32,
     pub four: Vec4,
     pub two: Vec2,
-    pub compound: Bar
+    pub compound: Bar,
 }
 
 #[repr(C, packed)]
@@ -17,7 +17,7 @@ pub struct Foo {
 pub struct Bar {
     pub one: f32,
     pub four: Vec4,
-    pub matrix: Matrix4
+    pub matrix: Matrix4,
 }
 
 dynamiclayout!(FooLayout + FooAccessor {
@@ -55,20 +55,32 @@ fn make_bar_layout() -> BarLayout {
 
 fn new_foo() -> Foo {
     Foo {
-        three: Vec3 { x: 1.0, y: 2.0, z: 3.0 },
+        three: Vec3 {
+            x: 1.0,
+            y: 2.0,
+            z: 3.0,
+        },
         one: 4.0,
-        four: Vec4 { x: 5.0, y: 6.0, z: 7.0, w: 8.0 },
+        four: Vec4 {
+            x: 5.0,
+            y: 6.0,
+            z: 7.0,
+            w: 8.0,
+        },
         two: Vec2 { x: 9.0, y: 10.0 },
         compound: Bar {
             one: 11.0,
-            four: Vec4 { x: 12.0, y: 13.0, z: 14.0, w: 15.0 },
-            matrix: Matrix4::new([
-                [101.0, 102.0, 103.0, 104.0],
-                [105.0, 106.0, 107.0, 108.0],
-                [109.0, 110.0, 111.0, 112.0],
-                [113.0, 114.0, 115.0, 116.0]
-            ])
-        }
+            four: Vec4 {
+                x: 12.0,
+                y: 13.0,
+                z: 14.0,
+                w: 15.0,
+            },
+            matrix: Matrix4::new([[101.0, 102.0, 103.0, 104.0],
+                                  [105.0, 106.0, 107.0, 108.0],
+                                  [109.0, 110.0, 111.0, 112.0],
+                                  [113.0, 114.0, 115.0, 116.0]]),
+        },
     }
 }
 
@@ -102,22 +114,22 @@ fn one_to_one_mapping() {
     assert_eq!(foo.compound.four.z, acc.compound.four.z);
     assert_eq!(foo.compound.four.w, acc.compound.four.w);
 
-    assert_eq!( foo.compound.matrix[0][0], acc.compound.matrix[0][0] );
-    assert_eq!( foo.compound.matrix[0][1], acc.compound.matrix[0][1] );
-    assert_eq!( foo.compound.matrix[0][2], acc.compound.matrix[0][2] );
-    assert_eq!( foo.compound.matrix[0][3], acc.compound.matrix[0][3] );
-    assert_eq!( foo.compound.matrix[1][0], acc.compound.matrix[1][0] );
-    assert_eq!( foo.compound.matrix[1][1], acc.compound.matrix[1][1] );
-    assert_eq!( foo.compound.matrix[1][2], acc.compound.matrix[1][2] );
-    assert_eq!( foo.compound.matrix[1][3], acc.compound.matrix[1][3] );
-    assert_eq!( foo.compound.matrix[2][0], acc.compound.matrix[2][0] );
-    assert_eq!( foo.compound.matrix[2][1], acc.compound.matrix[2][1] );
-    assert_eq!( foo.compound.matrix[2][2], acc.compound.matrix[2][2] );
-    assert_eq!( foo.compound.matrix[2][3], acc.compound.matrix[2][3] );
-    assert_eq!( foo.compound.matrix[3][0], acc.compound.matrix[3][0] );
-    assert_eq!( foo.compound.matrix[3][1], acc.compound.matrix[3][1] );
-    assert_eq!( foo.compound.matrix[3][2], acc.compound.matrix[3][2] );
-    assert_eq!( foo.compound.matrix[3][3], acc.compound.matrix[3][3] );
+    assert_eq!(foo.compound.matrix[0][0], acc.compound.matrix[0][0]);
+    assert_eq!(foo.compound.matrix[0][1], acc.compound.matrix[0][1]);
+    assert_eq!(foo.compound.matrix[0][2], acc.compound.matrix[0][2]);
+    assert_eq!(foo.compound.matrix[0][3], acc.compound.matrix[0][3]);
+    assert_eq!(foo.compound.matrix[1][0], acc.compound.matrix[1][0]);
+    assert_eq!(foo.compound.matrix[1][1], acc.compound.matrix[1][1]);
+    assert_eq!(foo.compound.matrix[1][2], acc.compound.matrix[1][2]);
+    assert_eq!(foo.compound.matrix[1][3], acc.compound.matrix[1][3]);
+    assert_eq!(foo.compound.matrix[2][0], acc.compound.matrix[2][0]);
+    assert_eq!(foo.compound.matrix[2][1], acc.compound.matrix[2][1]);
+    assert_eq!(foo.compound.matrix[2][2], acc.compound.matrix[2][2]);
+    assert_eq!(foo.compound.matrix[2][3], acc.compound.matrix[2][3]);
+    assert_eq!(foo.compound.matrix[3][0], acc.compound.matrix[3][0]);
+    assert_eq!(foo.compound.matrix[3][1], acc.compound.matrix[3][1]);
+    assert_eq!(foo.compound.matrix[3][2], acc.compound.matrix[3][2]);
+    assert_eq!(foo.compound.matrix[3][3], acc.compound.matrix[3][3]);
 
     acc.three.y = 999.0;
     assert_eq!(foo.three.y, 999.0);
