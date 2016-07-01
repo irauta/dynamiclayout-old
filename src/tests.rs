@@ -150,7 +150,7 @@ fn vector_indexing() {
 }
 
 #[test]
-#[should_panic]
+#[should_panic(expected = "index out of bounds")]
 fn vector_out_of_bounds() {
     let mut vec = Vec3::new(1.0, 2.0, 3.0);
     vec[4] = 4.0;
@@ -184,7 +184,7 @@ fn dynamic_matrix_indexing() {
 }
 
 #[test]
-#[should_panic]
+#[should_panic(expected = "index out of bounds")]
 fn dynamic_matrix_out_of_bounds_1() {
     let layout = matrix_layout();
     let mut bytes = matrix_bytes();
@@ -194,7 +194,7 @@ fn dynamic_matrix_out_of_bounds_1() {
 }
 
 #[test]
-#[should_panic]
+#[should_panic(expected = "index out of bounds")]
 fn dynamic_matrix_out_of_bounds_2() {
     let layout = matrix_layout();
     let mut bytes = matrix_bytes();
