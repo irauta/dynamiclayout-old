@@ -1,6 +1,6 @@
 
 use std::ops::{Index, IndexMut};
-use {ArrayField, LayoutDynamicField, AccessDynamicField};
+use {ArrayField, LayoutDynamicField, AccessDynamicField, FieldSpan};
 
 macro_rules! make_matrix_type {
     ($matrix_type:ident [$column_count:expr][$row_count:expr] $($field:expr),+) => (
@@ -30,6 +30,15 @@ macro_rules! make_matrix_type {
 
         impl LayoutDynamicField for $matrix_type {
             type Layout = ArrayField;
+
+            fn get_field_spans(layout: &Self::Layout) -> Box<Iterator<Item=FieldSpan>> {
+                let offset = layout.offset;
+                let stride = layout.stride;
+                Box::new((0..4).map(move |i| FieldSpan {
+                    offset: (offset + stride * i) as u16,
+                    length: (::std::mem::size_of::<f32>() * $row_count) as u16,
+                }))
+            }
         }
 
         impl<'a> AccessDynamicField<'a> for $matrix_type {

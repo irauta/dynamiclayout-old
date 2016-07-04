@@ -3,6 +3,14 @@ macro_rules! impl_primitive_accessor {
     ($primitive_type:ty) => (
         impl ::LayoutDynamicField for $primitive_type {
             type Layout = ::DynamicField;
+
+            fn get_field_spans(layout: &Self::Layout) -> Box<Iterator<Item=::FieldSpan>> {
+                let span = ::FieldSpan {
+                    offset: layout.offset,
+                    length: ::std::mem::size_of::<$primitive_type>() as u16,
+                };
+                Box::new(Some(span).into_iter())
+            }
         }
         impl<'a> ::AccessDynamicField<'a> for $primitive_type {
             type Accessor = &'a mut $primitive_type;
@@ -49,8 +57,16 @@ impl ArrayField {
 }
 
 
+#[derive(Debug)]
+pub struct FieldSpan {
+    pub offset: u16,
+    pub length: u16,
+}
+
 pub trait LayoutDynamicField {
     type Layout;
+
+    fn get_field_spans(layout: &Self::Layout) -> Box<Iterator<Item=FieldSpan>>;
 }
 
 pub trait AccessDynamicField<'a>: LayoutDynamicField {
@@ -82,6 +98,13 @@ macro_rules! dynamiclayout {
 
         impl $crate::LayoutDynamicField for $layout_struct_name {
             type Layout = $layout_struct_name;
+
+            fn get_field_spans(layout: &Self::Layout) -> Box<Iterator<Item=$crate::FieldSpan>> {
+                Box::new(
+                    ::std::iter::empty()
+                    $(.chain(<$field_type as $crate::LayoutDynamicField>::get_field_spans(&layout.$field_name)))+
+                )
+            }
         }
 
         impl<'a> $crate::AccessDynamicField<'a> for $layout_struct_name {
