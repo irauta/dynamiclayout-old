@@ -4,6 +4,13 @@ macro_rules! impl_primitive_accessor {
         impl ::LayoutDynamicField for $primitive_type {
             type Layout = ::DynamicField;
 
+            fn make_layout(layout_field: &::LayoutField) -> Result<Self::Layout, ()> {
+                match *layout_field {
+                    ::LayoutField::PrimitiveField(offset) => Ok(::DynamicField { offset: offset }),
+                    _ => Err(())
+                }
+            }
+
             fn get_field_spans(layout: &Self::Layout) -> Box<Iterator<Item=::FieldSpan>> {
                 let span = ::FieldSpan {
                     offset: layout.offset,
@@ -30,6 +37,26 @@ impl_primitive_accessor!(u32);
 
 pub mod vector_types;
 pub mod matrix_types;
+
+
+pub enum LayoutField<'a> {
+    PrimitiveField (u16),
+    ArrayField {
+        offset: u16,
+        stride: u16,
+    },
+    StructField(&'a LoadStructLayout),
+}
+
+pub trait LoadStructLayout {
+    fn get_field_layout(&self, field_name: &str) -> Option<&LayoutField>;
+}
+
+impl<'a> LoadStructLayout for &'a [(&'a str, ::LayoutField<'a>)] {
+    fn get_field_layout(&self, field_name: &str) -> Option<&LayoutField> {
+        self.iter().find(|x| x.0 == field_name).map(|x| &x.1)
+    }
+}
 
 
 #[derive(Default)]
@@ -66,6 +93,8 @@ pub struct FieldSpan {
 pub trait LayoutDynamicField {
     type Layout;
 
+    fn make_layout(layout_field: &LayoutField) -> Result<Self::Layout, ()>;
+
     fn get_field_spans(layout: &Self::Layout) -> Box<Iterator<Item=FieldSpan>>;
 }
 
@@ -98,6 +127,24 @@ macro_rules! dynamiclayout {
 
         impl $crate::LayoutDynamicField for $layout_struct_name {
             type Layout = $layout_struct_name;
+
+            fn make_layout(layout: &::LayoutField) -> Result<Self::Layout, ()> {
+                match *layout {
+                    $crate::LayoutField::StructField(ref layout) => {
+                        $(let $field_name = {
+                            if let Some(field) = layout.get_field_layout(stringify!($field_name)) {
+                                field
+                            } else {
+                                return Err(());
+                            }
+                        };)+
+                        Ok($layout_struct_name {
+                            $($field_name: try!(<$field_type as $crate::LayoutDynamicField>::make_layout($field_name))),+
+                        })
+                    },
+                    _ => Err(())
+                }
+            }
 
             fn get_field_spans(layout: &Self::Layout) -> Box<Iterator<Item=$crate::FieldSpan>> {
                 Box::new(

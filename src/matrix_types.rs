@@ -31,6 +31,13 @@ macro_rules! make_matrix_type {
         impl LayoutDynamicField for $matrix_type {
             type Layout = ArrayField;
 
+            fn make_layout(layout_field: &::LayoutField) -> Result<Self::Layout, ()> {
+                match *layout_field {
+                    ::LayoutField::ArrayField { offset, stride } => Ok(::ArrayField { offset: offset, stride: stride }),
+                    _ => Err(())
+                }
+            }
+
             fn get_field_spans(layout: &Self::Layout) -> Box<Iterator<Item=FieldSpan>> {
                 let offset = layout.offset;
                 let stride = layout.stride;

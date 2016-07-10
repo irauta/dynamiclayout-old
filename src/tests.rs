@@ -34,6 +34,31 @@ dynamiclayout!(BarLayout + BarAccessor {
     matrix: Matrix4
 });
 
+use super::LayoutField;
+use super::LayoutField::PrimitiveField;
+use super::LayoutField::StructField;
+
+
+/*const BAR_LAYOUT: &'static [(&'static str, LayoutField<'static>)] = &[
+//const BAR_FIELDS: &'static [(&'static str, LayoutField<'static>)] = &[
+//const BAR_FIELDS: &'static ::LoadStructLayout = &[
+//const BAR_LAYOUT: LayoutField<'static> = StructField(&[
+    ("one", PrimitiveField(40)),
+    ("four", PrimitiveField(44)),
+    ("matrix", PrimitiveField(60)),
+    ("matrix", PrimitiveField(16)),
+];
+//const BAR_LAYOUT: LayoutField<'static> = StructField(BAR_FIELDS);
+
+const FOO_LAYOUT: &'static [(&'static str, LayoutField<'static>)] = &[
+    ("three", PrimitiveField(0)),
+    ("one", PrimitiveField(12)),
+    ("four", PrimitiveField(16)),
+    ("two", PrimitiveField(32)),
+    ("compound", StructField(&BAR_LAYOUT)),
+//    ("compound", BAR_LAYOUT),
+];*/
+
 fn make_foo_layout() -> FooLayout {
     let mut layout: FooLayout = Default::default();
     layout.three.offset = 0;
@@ -43,6 +68,10 @@ fn make_foo_layout() -> FooLayout {
     layout.compound = make_bar_layout();
     layout
 }
+
+/*fn make_foo_layout2() -> FooLayout {
+    <FooLayout as ::LayoutDynamicField>::make_layout(&StructField(FOO_LAYOUT)).unwrap()
+}*/
 
 fn make_bar_layout() -> BarLayout {
     let mut layout: BarLayout = Default::default();
@@ -202,4 +231,11 @@ fn dynamic_matrix_out_of_bounds_2() {
     let mut acc = layout.accessor(&mut bytes);
     // Cause panic when accessing the nested array
     acc.matrix[0][4] = 1.0;
+}
+
+#[test]
+fn field_spans() {
+    let layout = make_foo_layout();
+    let spans: Vec<_> = <FooLayout as ::LayoutDynamicField>::get_field_spans(&layout).collect();
+    println!("{:?}", spans);
 }
