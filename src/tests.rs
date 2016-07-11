@@ -43,7 +43,7 @@ use super::LayoutField::StructField;
 const BAR_FIELDS: &'static [(&'static str, LayoutField<'static>)] = &[
     ("one", PrimitiveField(40)),
     ("four", PrimitiveField(44)),
-    ("matrix", ArrayField { offset: 60, stride: 16 }),
+    ("matrix", ArrayField(60, 16)),
 ];
 const BAR_LAYOUT: LayoutField<'static> = StructField(&BAR_FIELDS);
 

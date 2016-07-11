@@ -45,10 +45,7 @@ pub mod matrix_types;
 
 pub enum LayoutField<'a> {
     PrimitiveField (OffsetType),
-    ArrayField {
-        offset: OffsetType,
-        stride: StrideType,
-    },
+    ArrayField (OffsetType, StrideType),
     StructField(&'a LoadStructLayout),
 }
 
