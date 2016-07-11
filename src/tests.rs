@@ -36,51 +36,29 @@ dynamiclayout!(BarLayout + BarAccessor {
 
 use super::LayoutField;
 use super::LayoutField::PrimitiveField;
+use super::LayoutField::ArrayField;
 use super::LayoutField::StructField;
 
 
-/*const BAR_LAYOUT: &'static [(&'static str, LayoutField<'static>)] = &[
-//const BAR_FIELDS: &'static [(&'static str, LayoutField<'static>)] = &[
-//const BAR_FIELDS: &'static ::LoadStructLayout = &[
-//const BAR_LAYOUT: LayoutField<'static> = StructField(&[
+const BAR_FIELDS: &'static [(&'static str, LayoutField<'static>)] = &[
     ("one", PrimitiveField(40)),
     ("four", PrimitiveField(44)),
-    ("matrix", PrimitiveField(60)),
-    ("matrix", PrimitiveField(16)),
+    ("matrix", ArrayField { offset: 60, stride: 16 }),
 ];
-//const BAR_LAYOUT: LayoutField<'static> = StructField(BAR_FIELDS);
+const BAR_LAYOUT: LayoutField<'static> = StructField(&BAR_FIELDS);
 
-const FOO_LAYOUT: &'static [(&'static str, LayoutField<'static>)] = &[
+const FOO_FIELDS: &'static [(&'static str, LayoutField<'static>)] = &[
     ("three", PrimitiveField(0)),
     ("one", PrimitiveField(12)),
     ("four", PrimitiveField(16)),
     ("two", PrimitiveField(32)),
-    ("compound", StructField(&BAR_LAYOUT)),
-//    ("compound", BAR_LAYOUT),
-];*/
+    ("compound", BAR_LAYOUT),
+];
 
 fn make_foo_layout() -> FooLayout {
-    let mut layout: FooLayout = Default::default();
-    layout.three.offset = 0;
-    layout.one.offset = 12;
-    layout.four.offset = 16;
-    layout.two.offset = 32;
-    layout.compound = make_bar_layout();
-    layout
+    FooLayout::load_layout(&FOO_FIELDS).unwrap()
 }
 
-/*fn make_foo_layout2() -> FooLayout {
-    <FooLayout as ::LayoutDynamicField>::make_layout(&StructField(FOO_LAYOUT)).unwrap()
-}*/
-
-fn make_bar_layout() -> BarLayout {
-    let mut layout: BarLayout = Default::default();
-    layout.one.offset = 40;
-    layout.four.offset = 44;
-    layout.matrix.offset = 60;
-    layout.matrix.stride = 16;
-    layout
-}
 
 fn new_foo() -> Foo {
     Foo {

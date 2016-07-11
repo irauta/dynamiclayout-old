@@ -118,6 +118,11 @@ macro_rules! dynamiclayout {
 
         impl $layout_struct_name {
             #[allow(dead_code)]
+            pub fn load_layout(layout: &$crate::LoadStructLayout) -> Result<$layout_struct_name, ()> {
+                <$layout_struct_name as $crate::LayoutDynamicField>::make_layout(&$crate::LayoutField::StructField(layout))
+            }
+
+            #[allow(dead_code)]
             pub fn accessor<'a>(&'a self, bytes: &'a mut[u8]) -> $accessor_struct_name<'a> {
                 unsafe {
                     <$layout_struct_name as $crate::AccessDynamicField>::accessor_from_layout(self, bytes.as_mut_ptr())
