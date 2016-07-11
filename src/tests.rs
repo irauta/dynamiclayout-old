@@ -1,6 +1,8 @@
 
 use vector_types::{Vec2, Vec3, Vec4};
 use matrix_types::Matrix4;
+use ::LayoutField;
+use ::LayoutField::*;
 
 #[repr(C, packed)]
 #[derive(Debug, Copy, Clone)]
@@ -33,12 +35,6 @@ dynamiclayout!(BarLayout + BarAccessor {
     four: Vec4,
     matrix: Matrix4
 });
-
-use super::LayoutField;
-use super::LayoutField::PrimitiveField;
-use super::LayoutField::ArrayField;
-use super::LayoutField::StructField;
-
 
 const BAR_FIELDS: &'static [(&'static str, LayoutField<'static>)] = &[
     ("one", PrimitiveField(40)),
