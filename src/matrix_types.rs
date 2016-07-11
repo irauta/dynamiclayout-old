@@ -1,6 +1,6 @@
 
 use std::ops::{Index, IndexMut};
-use {ArrayField, LayoutDynamicField, AccessDynamicField, FieldSpan};
+use {ArrayField, LayoutDynamicField, AccessDynamicField, FieldSpan, OffsetType, LengthType};
 
 macro_rules! make_matrix_type {
     ($matrix_type:ident [$column_count:expr][$row_count:expr] $($field:expr),+) => (
@@ -42,8 +42,8 @@ macro_rules! make_matrix_type {
                 let offset = layout.offset;
                 let stride = layout.stride;
                 Box::new((0..4).map(move |i| FieldSpan {
-                    offset: (offset + stride * i) as u16,
-                    length: (::std::mem::size_of::<f32>() * $row_count) as u16,
+                    offset: (offset + stride * i) as OffsetType,
+                    length: (::std::mem::size_of::<f32>() * $row_count) as LengthType,
                 }))
             }
         }

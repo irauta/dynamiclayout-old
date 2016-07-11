@@ -1,4 +1,8 @@
 
+pub type OffsetType = u16;
+pub type StrideType = u16;
+pub type LengthType = u16;
+
 macro_rules! impl_primitive_accessor {
     ($primitive_type:ty) => (
         impl ::LayoutDynamicField for $primitive_type {
@@ -14,7 +18,7 @@ macro_rules! impl_primitive_accessor {
             fn get_field_spans(layout: &Self::Layout) -> Box<Iterator<Item=::FieldSpan>> {
                 let span = ::FieldSpan {
                     offset: layout.offset,
-                    length: ::std::mem::size_of::<$primitive_type>() as u16,
+                    length: ::std::mem::size_of::<$primitive_type>() as ::LengthType,
                 };
                 Box::new(Some(span).into_iter())
             }
@@ -40,10 +44,10 @@ pub mod matrix_types;
 
 
 pub enum LayoutField<'a> {
-    PrimitiveField (u16),
+    PrimitiveField (OffsetType),
     ArrayField {
-        offset: u16,
-        stride: u16,
+        offset: OffsetType,
+        stride: StrideType,
     },
     StructField(&'a LoadStructLayout),
 }
@@ -61,7 +65,7 @@ impl<'a> LoadStructLayout for &'a [(&'a str, ::LayoutField<'a>)] {
 
 #[derive(Default)]
 pub struct DynamicField {
-    offset: u16,
+    offset: OffsetType,
 }
 
 impl DynamicField {
@@ -72,12 +76,12 @@ impl DynamicField {
 
 #[derive(Default)]
 pub struct ArrayField {
-    offset: u16,
-    stride: u16,
+    offset: OffsetType,
+    stride: StrideType,
 }
 
 impl ArrayField {
-    pub unsafe fn offset_ptr(&self, ptr: *mut u8, index: u16) -> *mut u8 {
+    pub unsafe fn offset_ptr(&self, ptr: *mut u8, index: usize) -> *mut u8 {
         let total_offset: isize = self.offset as isize + self.stride as isize * index as isize;
         ptr.offset(total_offset)
     }
@@ -86,8 +90,8 @@ impl ArrayField {
 
 #[derive(Debug)]
 pub struct FieldSpan {
-    pub offset: u16,
-    pub length: u16,
+    pub offset: OffsetType,
+    pub length: LengthType,
 }
 
 pub trait LayoutDynamicField {
