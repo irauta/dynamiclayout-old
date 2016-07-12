@@ -32,9 +32,10 @@ macro_rules! make_matrix_type {
             type Layout = ArrayField;
 
             fn make_layout(layout_field: &::LayoutField) -> Result<Self::Layout, ()> {
-                match *layout_field {
-                    ::LayoutField::ArrayField (offset, stride) => Ok(ArrayField { offset: offset, stride: stride }),
-                    _ => Err(())
+                if let ::LayoutField::ArrayField (offset, stride) = *layout_field {
+                    Ok(ArrayField { offset: offset, stride: stride })
+                } else {
+                    Err(())
                 }
             }
 

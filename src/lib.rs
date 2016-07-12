@@ -9,9 +9,10 @@ macro_rules! impl_primitive_accessor {
             type Layout = ::DynamicField;
 
             fn make_layout(layout_field: &::LayoutField) -> Result<Self::Layout, ()> {
-                match *layout_field {
-                    ::LayoutField::PrimitiveField(offset) => Ok(::DynamicField { offset: offset }),
-                    _ => Err(())
+                if let ::LayoutField::PrimitiveField(offset) = *layout_field {
+                    Ok(::DynamicField { offset: offset })
+                } else {
+                    Err(())
                 }
             }
 
@@ -135,20 +136,16 @@ macro_rules! dynamiclayout {
             type Layout = $layout_struct_name;
 
             fn make_layout(layout: &::LayoutField) -> Result<Self::Layout, ()> {
-                match *layout {
-                    $crate::LayoutField::StructField(ref layout) => {
-                        $(let $field_name = {
-                            if let Some(field) = layout.get_field_layout(stringify!($field_name)) {
-                                field
-                            } else {
-                                return Err(());
-                            }
-                        };)+
-                        Ok($layout_struct_name {
-                            $($field_name: try!(<$field_type as $crate::LayoutDynamicField>::make_layout($field_name))),+
-                        })
-                    },
-                    _ => Err(())
+                if let $crate::LayoutField::StructField(ref layout) = *layout {
+                    Ok($layout_struct_name {
+                        $($field_name: try!(layout
+                            .get_field_layout(stringify!($field_name))
+                            .ok_or(())
+                            .and_then(<$field_type as $crate::LayoutDynamicField>::make_layout))
+                        ),+
+                    })
+                } else {
+                    Err(())
                 }
             }
 
