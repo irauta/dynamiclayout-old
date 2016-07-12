@@ -33,7 +33,7 @@ macro_rules! make_matrix_type {
 
             fn make_layout(layout_field: &::LayoutField) -> Result<Self::Layout, ()> {
                 match *layout_field {
-                    ::LayoutField::ArrayField (offset, stride) => Ok(::ArrayField { offset: offset, stride: stride }),
+                    ::LayoutField::ArrayField (offset, stride) => Ok(ArrayField { offset: offset, stride: stride }),
                     _ => Err(())
                 }
             }

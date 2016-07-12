@@ -21,14 +21,18 @@ macro_rules! make_vector_type {
             type Output = $field_type;
 
             fn index(&self, index: usize) -> &Self::Output {
-                let array = unsafe { &*(self as *const Self as *const [$field_type; $field_count]) };
+                let array = unsafe {
+                    &*(self as *const Self as *const [$field_type; $field_count])
+                };
                 &array[index]
             }
         }
 
         impl IndexMut<usize> for $vector_type {
             fn index_mut(&mut self, index: usize) -> &mut Self::Output {
-                let array = unsafe { &mut *(self as *mut Self as *mut [$field_type; $field_count]) };
+                let array = unsafe {
+                    &mut *(self as *mut Self as *mut [$field_type; $field_count])
+                };
                 &mut array[index]
             }
         }

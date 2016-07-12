@@ -1,8 +1,8 @@
 
 use vector_types::{Vec2, Vec3, Vec4};
 use matrix_types::Matrix4;
-use ::LayoutField;
-use ::LayoutField::*;
+use {LayoutDynamicField, LayoutField};
+use LayoutField::*;
 
 #[repr(C, packed)]
 #[derive(Debug, Copy, Clone)]
@@ -36,20 +36,17 @@ dynamiclayout!(BarLayout + BarAccessor {
     matrix: Matrix4
 });
 
-const BAR_FIELDS: &'static [(&'static str, LayoutField<'static>)] = &[
-    ("one", PrimitiveField(40)),
-    ("four", PrimitiveField(44)),
-    ("matrix", ArrayField(60, 16)),
-];
+const BAR_FIELDS: &'static [(&'static str, LayoutField<'static>)] = &[("one", PrimitiveField(40)),
+                                                                      ("four", PrimitiveField(44)),
+                                                                      ("matrix",
+                                                                       ArrayField(60, 16))];
 const BAR_LAYOUT: LayoutField<'static> = StructField(&BAR_FIELDS);
 
-const FOO_FIELDS: &'static [(&'static str, LayoutField<'static>)] = &[
-    ("three", PrimitiveField(0)),
-    ("one", PrimitiveField(12)),
-    ("four", PrimitiveField(16)),
-    ("two", PrimitiveField(32)),
-    ("compound", BAR_LAYOUT),
-];
+const FOO_FIELDS: &'static [(&'static str, LayoutField<'static>)] = &[("three", PrimitiveField(0)),
+                                                                      ("one", PrimitiveField(12)),
+                                                                      ("four", PrimitiveField(16)),
+                                                                      ("two", PrimitiveField(32)),
+                                                                      ("compound", BAR_LAYOUT)];
 
 fn make_foo_layout() -> FooLayout {
     FooLayout::load_layout(&FOO_FIELDS).unwrap()
@@ -210,6 +207,7 @@ fn dynamic_matrix_out_of_bounds_2() {
 #[test]
 fn field_spans() {
     let layout = make_foo_layout();
-    let spans: Vec<_> = <FooLayout as ::LayoutDynamicField>::get_field_spans(&layout).collect();
+    let spans: Vec<_> =
+        <FooLayout as LayoutDynamicField>::get_field_spans(&layout).collect();
     println!("{:?}", spans);
 }

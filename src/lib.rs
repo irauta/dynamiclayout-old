@@ -44,8 +44,8 @@ pub mod matrix_types;
 
 
 pub enum LayoutField<'a> {
-    PrimitiveField (OffsetType),
-    ArrayField (OffsetType, StrideType),
+    PrimitiveField(OffsetType),
+    ArrayField(OffsetType, StrideType),
     StructField(&'a LoadStructLayout),
 }
 
@@ -96,7 +96,7 @@ pub trait LayoutDynamicField {
 
     fn make_layout(layout_field: &LayoutField) -> Result<Self::Layout, ()>;
 
-    fn get_field_spans(layout: &Self::Layout) -> Box<Iterator<Item=FieldSpan>>;
+    fn get_field_spans(layout: &Self::Layout) -> Box<Iterator<Item = FieldSpan>>;
 }
 
 pub trait AccessDynamicField<'a>: LayoutDynamicField {
