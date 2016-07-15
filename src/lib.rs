@@ -115,7 +115,7 @@ macro_rules! dynamiclayout {
     ) => (
         #[derive(Default)]
         pub struct $layout_struct_name {
-            $(pub $field_name: <$field_type as $crate::LayoutDynamicField>::Layout),+
+            $($field_name: <$field_type as $crate::LayoutDynamicField>::Layout),+
         }
 
         impl $layout_struct_name {

@@ -22,19 +22,26 @@ pub struct Bar {
     pub matrix: Matrix4,
 }
 
-dynamiclayout!(FooLayout + FooAccessor {
-    three: Vec3,
-    one: f32,
-    four: Vec4,
-    two: Vec2,
-    compound: BarLayout
-});
+mod layout_types {
+    use vector_types::{Vec2, Vec3, Vec4};
+    use matrix_types::Matrix4;
 
-dynamiclayout!(BarLayout + BarAccessor {
-    one: f32,
-    four: Vec4,
-    matrix: Matrix4
-});
+    dynamiclayout!(FooLayout + FooAccessor {
+        three: Vec3,
+        one: f32,
+        four: Vec4,
+        two: Vec2,
+        compound: BarLayout
+    });
+
+    dynamiclayout!(BarLayout + BarAccessor {
+        one: f32,
+        four: Vec4,
+        matrix: Matrix4
+    });
+}
+
+use self::layout_types::*;
 
 const BAR_FIELDS: &'static [(&'static str, LayoutField<'static>)] = &[("one", PrimitiveField(40)),
                                                                       ("four", PrimitiveField(44)),
