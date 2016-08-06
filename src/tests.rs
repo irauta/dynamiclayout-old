@@ -22,6 +22,14 @@ pub struct Bar {
     pub matrix: Matrix4,
 }
 
+#[repr(C, packed)]
+#[derive(Debug, Copy, Clone)]
+pub struct PrimitiveArray {
+    pub first: i32,
+    pub array: [i32; 8],
+    pub last: i32,
+}
+
 mod layout_types {
     use vector_types::{Vec2, Vec3, Vec4};
     use matrix_types::Matrix4;
@@ -39,7 +47,15 @@ mod layout_types {
         four: Vec4,
         matrix: Matrix4
     });
+
+    dynamiclayout!(PrimitiveArrayLayout + PrimitiveArrayAccessor {
+        first: i32,
+        array: [i32; 8],
+        last: i32
+    });
 }
+
+
 
 use self::layout_types::*;
 
@@ -55,8 +71,16 @@ const FOO_FIELDS: &'static [(&'static str, LayoutField<'static>)] = &[("three", 
                                                                       ("two", PrimitiveField(32)),
                                                                       ("compound", BAR_LAYOUT)];
 
+const P_A_FIELDS: &'static [(&'static str, LayoutField<'static>)] = &[("first", PrimitiveField(0)),
+                                                                      ("array", ArrayField(4, 4)),
+                                                                      ("last", PrimitiveField(36))];
+
 fn make_foo_layout() -> FooLayout {
     FooLayout::load_layout(&FOO_FIELDS).unwrap()
+}
+
+fn make_primitive_array_layout() -> PrimitiveArrayLayout {
+    PrimitiveArrayLayout::load_layout(&P_A_FIELDS).unwrap()
 }
 
 
@@ -217,4 +241,30 @@ fn field_spans() {
     let spans: Vec<_> =
         <FooLayout as LayoutDynamicField>::get_field_spans(&layout).collect();
     println!("{:?}", spans);
+}
+
+#[test]
+fn primitive_array() {
+    let layout = make_primitive_array_layout();
+    let mut pa = PrimitiveArray {
+        first: 11,
+        array: [1, 2, 3, 4, 5, 6, 7, 8],
+        last: 99,
+    };
+    let mut bytes: &mut [u8] = unsafe { &mut *(&mut pa as *mut PrimitiveArray as *mut [u8; 40]) };
+    let mut acc = layout.accessor(bytes);
+
+    assert_eq!(*acc.first, 11);
+    assert_eq!(acc.array[0], 1);
+    assert_eq!(acc.array[1], 2);
+    assert_eq!(acc.array[2], 3);
+    assert_eq!(acc.array[3], 4);
+    assert_eq!(acc.array[4], 5);
+    assert_eq!(acc.array[5], 6);
+    assert_eq!(acc.array[6], 7);
+    assert_eq!(acc.array[7], 8);
+    assert_eq!(*acc.last, 99);
+
+    acc.array[3] = 15;
+    assert_eq!(acc.array[3], 15);
 }
