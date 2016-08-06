@@ -59,8 +59,6 @@ macro_rules! make_matrix_type {
             }
         }
     );
-
-    (tuple_workaround $x:expr) => ($x);
 }
 
 make_matrix_type!(Matrix2 [2][2] 0, 1);
