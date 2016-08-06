@@ -241,6 +241,7 @@ fn field_spans() {
     let spans: Vec<_> =
         <FooLayout as LayoutDynamicField>::get_field_spans(&layout).collect();
     println!("{:?}", spans);
+    // TODO: Actually test something
 }
 
 #[test]
