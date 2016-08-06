@@ -42,6 +42,7 @@ impl PrimitiveType for u32 {}
 
 pub mod vector_types;
 pub mod matrix_types;
+pub mod arrays;
 
 
 pub enum LayoutField<'a> {
