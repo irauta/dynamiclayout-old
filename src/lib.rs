@@ -3,41 +3,40 @@ pub type OffsetType = u16;
 pub type StrideType = u16;
 pub type LengthType = u16;
 
-macro_rules! impl_primitive_accessor {
-    ($primitive_type:ty) => (
-        impl ::LayoutDynamicField for $primitive_type {
-            type Layout = ::DynamicField;
+pub trait PrimitiveType : Sized {}
 
-            fn make_layout(layout_field: &::LayoutField) -> Result<Self::Layout, ()> {
-                if let ::LayoutField::PrimitiveField(offset) = *layout_field {
-                    Ok(::DynamicField { offset: offset })
-                } else {
-                    Err(())
-                }
-            }
 
-            fn get_field_spans(layout: &Self::Layout) -> Box<Iterator<Item=::FieldSpan>> {
-                let span = ::FieldSpan {
-                    offset: layout.offset,
-                    length: ::std::mem::size_of::<$primitive_type>() as ::LengthType,
-                };
-                Box::new(Some(span).into_iter())
-            }
+impl<T> ::LayoutDynamicField for T where T: PrimitiveType {
+    type Layout = ::DynamicField;
+
+    fn make_layout(layout_field: &::LayoutField) -> Result<Self::Layout, ()> {
+        if let ::LayoutField::PrimitiveField(offset) = *layout_field {
+            Ok(::DynamicField { offset: offset })
+        } else {
+            Err(())
         }
-        impl<'a> ::AccessDynamicField<'a> for $primitive_type {
-            type Accessor = &'a mut $primitive_type;
+    }
 
-            unsafe fn accessor_from_layout(layout: &'a Self::Layout, bytes: *mut u8) -> Self::Accessor {
-                &mut *(layout.offset_ptr(bytes) as *mut $primitive_type)
-            }
-        }
-
-    )
+    fn get_field_spans(layout: &Self::Layout) -> Box<Iterator<Item=::FieldSpan>> {
+        let span = ::FieldSpan {
+            offset: layout.offset,
+            length: ::std::mem::size_of::<T>() as ::LengthType,
+        };
+        Box::new(Some(span).into_iter())
+    }
 }
 
-impl_primitive_accessor!(f32);
-impl_primitive_accessor!(i32);
-impl_primitive_accessor!(u32);
+impl<'a, T> ::AccessDynamicField<'a> for T where T: 'a + PrimitiveType {
+    type Accessor = &'a mut T;
+
+    unsafe fn accessor_from_layout(layout: &'a Self::Layout, bytes: *mut u8) -> Self::Accessor {
+        &mut *(layout.offset_ptr(bytes) as *mut T)
+    }
+}
+
+impl PrimitiveType for f32 {}
+impl PrimitiveType for i32 {}
+impl PrimitiveType for u32 {}
 
 
 pub mod vector_types;

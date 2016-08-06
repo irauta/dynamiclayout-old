@@ -37,7 +37,7 @@ macro_rules! make_vector_type {
             }
         }
 
-        impl_primitive_accessor!($vector_type);
+        impl ::PrimitiveType for $vector_type {}
     )
 }
 
