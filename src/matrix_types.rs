@@ -58,6 +58,8 @@ macro_rules! make_matrix_type {
                 ]
             }
         }
+
+        impl ::MatrixType for $matrix_type {}
     );
 }
 

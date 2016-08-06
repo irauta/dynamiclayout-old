@@ -4,6 +4,7 @@ pub type StrideType = u16;
 pub type LengthType = u16;
 
 pub trait PrimitiveType : Sized {}
+pub trait MatrixType {}
 
 
 impl<T> ::LayoutDynamicField for T where T: PrimitiveType {
