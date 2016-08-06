@@ -7,27 +7,27 @@ pub trait PrimitiveType : Sized {}
 pub trait MatrixType {}
 
 
-impl<T> ::LayoutDynamicField for T where T: PrimitiveType {
-    type Layout = ::DynamicField;
+impl<T> LayoutDynamicField for T where T: PrimitiveType {
+    type Layout = DynamicField;
 
-    fn make_layout(layout_field: &::LayoutField) -> Result<Self::Layout, ()> {
-        if let ::LayoutField::PrimitiveField(offset) = *layout_field {
-            Ok(::DynamicField { offset: offset })
+    fn make_layout(layout_field: &LayoutField) -> Result<Self::Layout, ()> {
+        if let LayoutField::PrimitiveField(offset) = *layout_field {
+            Ok(DynamicField { offset: offset })
         } else {
             Err(())
         }
     }
 
-    fn get_field_spans(layout: &Self::Layout) -> Box<Iterator<Item=::FieldSpan>> {
-        let span = ::FieldSpan {
+    fn get_field_spans(layout: &Self::Layout) -> Box<Iterator<Item=FieldSpan>> {
+        let span = FieldSpan {
             offset: layout.offset,
-            length: ::std::mem::size_of::<T>() as ::LengthType,
+            length: ::std::mem::size_of::<T>() as LengthType,
         };
         Box::new(Some(span).into_iter())
     }
 }
 
-impl<'a, T> ::AccessDynamicField<'a> for T where T: 'a + PrimitiveType {
+impl<'a, T> AccessDynamicField<'a> for T where T: 'a + PrimitiveType {
     type Accessor = &'a mut T;
 
     unsafe fn accessor_from_layout(layout: &'a Self::Layout, bytes: *mut u8) -> Self::Accessor {

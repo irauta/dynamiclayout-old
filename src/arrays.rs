@@ -53,7 +53,7 @@ macro_rules! impl_arrays {
                 let stride = layout.stride;
                 Box::new((0..$array_length).map(move |i| FieldSpan {
                     offset: (offset + stride * i) as OffsetType,
-                    length: (::std::mem::size_of::<T>()) as LengthType,
+                    length: ::std::mem::size_of::<T>() as LengthType,
                 }))
             }
         }
