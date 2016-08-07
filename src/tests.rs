@@ -14,6 +14,8 @@ pub struct Foo {
     pub compound: Bar,
 }
 
+const FOO_SIZE: usize = 124;
+
 #[repr(C, packed)]
 #[derive(Debug, Copy, Clone)]
 pub struct Bar {
@@ -120,7 +122,6 @@ fn one_to_one_mapping() {
     let layout = make_foo_layout();
     let mut foo = new_foo();
 
-    const FOO_SIZE: usize = 124;
     assert_eq!(FOO_SIZE, ::std::mem::size_of_val(&foo));
     let mut bytes: &mut [u8] = unsafe { &mut *(&mut foo as *mut Foo as *mut [u8; FOO_SIZE]) };
 
@@ -241,7 +242,10 @@ fn field_spans() {
     let spans: Vec<_> =
         <FooLayout as LayoutDynamicField>::get_field_spans(&layout).collect();
     println!("{:?}", spans);
-    // TODO: Actually test something
+    let min = spans.iter().min_by_key(|span| span.offset).unwrap();
+    assert_eq!(min.offset, 0);
+    let max = spans.iter().max_by_key(|span| span.offset).unwrap();
+    assert_eq!((max.offset + max.length) as usize, FOO_SIZE);
 }
 
 #[test]
