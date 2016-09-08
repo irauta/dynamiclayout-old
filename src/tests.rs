@@ -1,6 +1,6 @@
 
 use vector_types::{Vec2, Vec3, Vec4};
-use matrix_types::Matrix4;
+use matrix_types::{Matrix4};
 use {LayoutDynamicField, LayoutField};
 use LayoutField::*;
 
@@ -34,7 +34,7 @@ pub struct PrimitiveArray {
 
 mod layout_types {
     use vector_types::{Vec2, Vec3, Vec4};
-    use matrix_types::Matrix4;
+    use matrix_types::{Matrix2x3, Matrix4};
 
     dynamiclayout!(FooLayout + FooAccessor {
         three: Vec3,
@@ -54,6 +54,10 @@ mod layout_types {
         first: i32,
         array: [i32; 8],
         last: i32
+    });
+
+    dynamiclayout!(MatrixArrayLayout + MatrixArrayAccessor {
+        array: [Matrix2x3; 2]
     });
 }
 
@@ -77,6 +81,9 @@ const P_A_FIELDS: &'static [(&'static str, LayoutField<'static>)] = &[("first", 
                                                                       ("array", ArrayField(4, 4)),
                                                                       ("last", PrimitiveField(36))];
 
+// Note that the matrices in the array are interleaved!
+const M_A_FIELDS: &'static [(&'static str, LayoutField<'static>)] = &[("array", MatrixArrayField(0, 12, 24))];
+
 fn make_foo_layout() -> FooLayout {
     FooLayout::load_layout(&FOO_FIELDS).unwrap()
 }
@@ -85,6 +92,9 @@ fn make_primitive_array_layout() -> PrimitiveArrayLayout {
     PrimitiveArrayLayout::load_layout(&P_A_FIELDS).unwrap()
 }
 
+fn make_matrix_array_layout() -> MatrixArrayLayout {
+    MatrixArrayLayout::load_layout(&M_A_FIELDS).unwrap()
+}
 
 fn new_foo() -> Foo {
     Foo {
@@ -272,4 +282,26 @@ fn primitive_array() {
 
     acc.array[3] = 15;
     assert_eq!(acc.array[3], 15);
+}
+
+#[test]
+fn matrix_array() {
+    let layout = make_matrix_array_layout();
+    let mut ma: [[f32; 3]; 4] = [[111.0, 112.0, 113.0],[211.0, 212.0, 213.0],[121.0, 122.0, 123.0],[221.0, 222.0, 223.0]];
+    let mut bytes: &mut [u8] = unsafe { &mut *(&mut ma as *mut [[f32; 3]; 4] as *mut [u8; 48]) };
+    let acc = layout.accessor(bytes);
+
+    assert_eq!(acc.array[0][0][0], 111.0);
+    assert_eq!(acc.array[0][0][1], 112.0);
+    assert_eq!(acc.array[0][0][2], 113.0);
+    assert_eq!(acc.array[0][1][0], 121.0);
+    assert_eq!(acc.array[0][1][1], 122.0);
+    assert_eq!(acc.array[0][1][2], 123.0);
+
+    assert_eq!(acc.array[1][0][0], 211.0);
+    assert_eq!(acc.array[1][0][1], 212.0);
+    assert_eq!(acc.array[1][0][2], 213.0);
+    assert_eq!(acc.array[1][1][0], 221.0);
+    assert_eq!(acc.array[1][1][1], 222.0);
+    assert_eq!(acc.array[1][1][2], 223.0);
 }

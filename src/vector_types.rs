@@ -36,8 +36,6 @@ macro_rules! make_vector_type {
                 &mut array[index]
             }
         }
-
-        impl ::PrimitiveType for $vector_type {}
     )
 }
 

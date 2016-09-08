@@ -3,51 +3,54 @@ pub type OffsetType = u16;
 pub type StrideType = u16;
 pub type LengthType = u16;
 
-pub trait PrimitiveType : Sized {}
-pub trait MatrixType {}
-
-
-impl<T> LayoutDynamicField for T where T: PrimitiveType {
-    type Layout = DynamicField;
-
-    fn make_layout(layout_field: &LayoutField) -> Result<Self::Layout, ()> {
-        if let LayoutField::PrimitiveField(offset) = *layout_field {
-            Ok(DynamicField { offset: offset })
-        } else {
-            Err(())
-        }
-    }
-
-    fn get_field_spans(layout: &Self::Layout) -> Box<Iterator<Item=FieldSpan>> {
-        let span = FieldSpan {
-            offset: layout.offset,
-            length: ::std::mem::size_of::<T>() as LengthType,
-        };
-        Box::new(Some(span).into_iter())
-    }
+macro_rules! repeat_macro {
+    ($repeated_macro:ident $($extra_params:tt)*) => (
+        $repeated_macro!(1 $($extra_params)*);
+        $repeated_macro!(2 $($extra_params)*);
+        $repeated_macro!(3 $($extra_params)*);
+        $repeated_macro!(4 $($extra_params)*);
+        $repeated_macro!(5 $($extra_params)*);
+        $repeated_macro!(6 $($extra_params)*);
+        $repeated_macro!(7 $($extra_params)*);
+        $repeated_macro!(8 $($extra_params)*);
+        $repeated_macro!(9 $($extra_params)*);
+        $repeated_macro!(10 $($extra_params)*);
+        $repeated_macro!(11 $($extra_params)*);
+        $repeated_macro!(12 $($extra_params)*);
+        $repeated_macro!(13 $($extra_params)*);
+        $repeated_macro!(14 $($extra_params)*);
+        $repeated_macro!(15 $($extra_params)*);
+        $repeated_macro!(16 $($extra_params)*);
+        $repeated_macro!(17 $($extra_params)*);
+        $repeated_macro!(18 $($extra_params)*);
+        $repeated_macro!(19 $($extra_params)*);
+        $repeated_macro!(20 $($extra_params)*);
+        $repeated_macro!(21 $($extra_params)*);
+        $repeated_macro!(22 $($extra_params)*);
+        $repeated_macro!(23 $($extra_params)*);
+        $repeated_macro!(24 $($extra_params)*);
+        $repeated_macro!(25 $($extra_params)*);
+        $repeated_macro!(26 $($extra_params)*);
+        $repeated_macro!(27 $($extra_params)*);
+        $repeated_macro!(28 $($extra_params)*);
+        $repeated_macro!(29 $($extra_params)*);
+        $repeated_macro!(30 $($extra_params)*);
+        $repeated_macro!(31 $($extra_params)*);
+        $repeated_macro!(32 $($extra_params)*);
+        $repeated_macro!(64 $($extra_params)*);
+        $repeated_macro!(128 $($extra_params)*);
+    )
 }
 
-impl<'a, T> AccessDynamicField<'a> for T where T: 'a + PrimitiveType {
-    type Accessor = &'a mut T;
-
-    unsafe fn accessor_from_layout(layout: &'a Self::Layout, bytes: *mut u8) -> Self::Accessor {
-        &mut *(layout.offset_ptr(bytes) as *mut T)
-    }
-}
-
-impl PrimitiveType for f32 {}
-impl PrimitiveType for i32 {}
-impl PrimitiveType for u32 {}
-
-
+pub mod primitive_types;
 pub mod vector_types;
 pub mod matrix_types;
-pub mod arrays;
 
 
 pub enum LayoutField<'a> {
     PrimitiveField(OffsetType),
     ArrayField(OffsetType, StrideType),
+    MatrixArrayField(OffsetType, StrideType, StrideType),
     StructField(&'a LoadStructLayout),
 }
 
@@ -62,7 +65,7 @@ impl<'a> LoadStructLayout for &'a [(&'a str, ::LayoutField<'a>)] {
 }
 
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct DynamicField {
     offset: OffsetType,
 }
@@ -73,7 +76,7 @@ impl DynamicField {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct ArrayField {
     offset: OffsetType,
     stride: StrideType,
@@ -84,6 +87,13 @@ impl ArrayField {
         let total_offset: isize = self.offset as isize + self.stride as isize * index as isize;
         ptr.offset(total_offset)
     }
+}
+
+#[derive(Default, Debug)]
+pub struct MatrixArrayField {
+    offset: OffsetType,
+    array_stride: StrideType,
+    matrix_stride: StrideType,
 }
 
 
@@ -114,7 +124,7 @@ macro_rules! dynamiclayout {
             $($field_name:ident : $field_type:ty),+
         }
     ) => (
-        #[derive(Default)]
+        #[derive(Default, Debug)]
         pub struct $layout_struct_name {
             $($field_name: <$field_type as $crate::LayoutDynamicField>::Layout),+
         }
