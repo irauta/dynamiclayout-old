@@ -46,6 +46,8 @@ pub mod primitive_types;
 pub mod vector_types;
 pub mod matrix_types;
 
+pub use vector_types::*;
+pub use matrix_types::*;
 
 pub enum LayoutField<'a> {
     PrimitiveField(OffsetType),
@@ -117,7 +119,7 @@ pub trait AccessDynamicField<'a>: LayoutDynamicField {
     unsafe fn accessor_from_layout(layout: &'a Self::Layout, bytes: *mut u8) -> Self::Accessor;
 }
 
-
+#[macro_export]
 macro_rules! dynamiclayout {
     (
         $layout_struct_name:ident + $accessor_struct_name:ident {
@@ -146,7 +148,7 @@ macro_rules! dynamiclayout {
         impl $crate::LayoutDynamicField for $layout_struct_name {
             type Layout = $layout_struct_name;
 
-            fn make_layout(layout: &::LayoutField) -> Result<Self::Layout, ()> {
+            fn make_layout(layout: &$crate::LayoutField) -> Result<Self::Layout, ()> {
                 if let $crate::LayoutField::StructField(ref layout) = *layout {
                     Ok($layout_struct_name {
                         $($field_name: try!(layout
