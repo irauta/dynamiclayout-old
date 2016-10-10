@@ -49,11 +49,14 @@ pub mod matrix_types;
 pub use vector_types::*;
 pub use matrix_types::*;
 
+pub trait StructField<'a> : AccessDynamicField<'a> {}
+
 pub enum LayoutField<'a> {
     PrimitiveField(OffsetType),
     ArrayField(OffsetType, StrideType),
     MatrixArrayField(OffsetType, StrideType, StrideType),
     StructField(&'a LoadStructLayout),
+    StructArrayField(&'a [&'a LoadStructLayout]),
 }
 
 pub trait LoadStructLayout {
@@ -180,12 +183,56 @@ macro_rules! dynamiclayout {
             }
         }
 
+        impl<'a> $crate::StructField<'a> for $layout_struct_name {}
+
         pub struct $accessor_struct_name<'a> {
             $(pub $field_name: <$field_type as $crate::AccessDynamicField<'a>>::Accessor),+
         }
     )
 }
 
+macro_rules! impl_struct_array {
+    ($length:expr) => (
+        impl<'a, T> LayoutDynamicField for [T; $length] where T: StructField<'a> {
+            type Layout = [<T as LayoutDynamicField>::Layout; $length];
+
+            fn make_layout(layout: &LayoutField) -> Result<Self::Layout, ()> {
+                if let $crate::LayoutField::StructArrayField(ref layouts) = *layout {
+                    let mut array: Self::Layout = unsafe { ::std::mem::zeroed() };
+                    if array.len() != layouts.len() {
+                        return Err(());
+                    }
+                    for i in 0..array.len() {
+                        let layout_field = LayoutField::StructField(layouts[i]);
+                        array[i] = try!(<T as LayoutDynamicField>::make_layout(&layout_field));
+                    }
+                    Ok(array)
+                } else {
+                    Err(())
+                }
+            }
+
+            fn get_field_spans(layout: &Self::Layout) -> Box<Iterator<Item=FieldSpan>> {
+                let spans: Vec<_> = layout.iter().flat_map(|l| <T as LayoutDynamicField>::get_field_spans(l)).collect();
+                Box::new(spans.into_iter())
+            }
+        }
+
+        impl<'a, T> AccessDynamicField<'a> for [T; $length] where T: StructField<'a> {
+            type Accessor = [<T as AccessDynamicField<'a>>::Accessor; $length];
+
+            unsafe fn accessor_from_layout(layout: &'a Self::Layout, bytes: *mut u8) -> Self::Accessor {
+                let mut array: Self::Accessor = ::std::mem::zeroed();
+                for i in 0..array.len() {
+                    array[i] = <T as AccessDynamicField>::accessor_from_layout(&layout[i], bytes);
+                }
+                array
+            }
+        }
+    )
+}
+
+repeat_macro!(impl_struct_array);
 
 #[cfg(test)]
 mod tests;
