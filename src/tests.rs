@@ -26,10 +26,23 @@ pub struct Bar {
 
 #[repr(C, packed)]
 #[derive(Debug, Copy, Clone)]
+pub struct Qux {
+    pub one: f32,
+    pub four: Vec4,
+}
+
+#[repr(C, packed)]
+#[derive(Debug, Copy, Clone)]
 pub struct PrimitiveArray {
     pub first: i32,
     pub array: [i32; 8],
     pub last: i32,
+}
+
+#[repr(C, packed)]
+#[derive(Debug, Copy, Clone)]
+pub struct StructArray {
+    pub array: [Qux; 2],
 }
 
 mod layout_types {
@@ -59,6 +72,15 @@ mod layout_types {
     dynamiclayout!(MatrixArrayLayout + MatrixArrayAccessor {
         array: [Matrix2x3; 2]
     });
+
+    dynamiclayout!(QuxLayout + QuxAccessor {
+        one: f32,
+        four: Vec4
+    });
+
+    dynamiclayout!(StructArrayLayout + StructArrayAccessor {
+        array: [QuxLayout; 2]
+    });
 }
 
 
@@ -85,6 +107,18 @@ const P_A_FIELDS: &'static [(&'static str, LayoutField<'static>)] = &[("first", 
 const M_A_FIELDS: &'static [(&'static str, LayoutField<'static>)] = &[("array",
                                                                        MatrixArrayField(0, 12, 24))];
 
+const QUX_FIELDS_0: &'static [(&'static str, LayoutField<'static>)] = &[("one", PrimitiveField(0)),
+                                                                      ("four", PrimitiveField(4))];
+
+const QUX_FIELDS_1: &'static [(&'static str, LayoutField<'static>)] = &[("one", PrimitiveField(20)),
+                                                                      ("four", PrimitiveField(24))];
+
+const QUX_LAYOUT_0: LayoutField<'static> = StructField(&QUX_FIELDS_0);
+const QUX_LAYOUT_1: LayoutField<'static> = StructField(&QUX_FIELDS_1);
+const S_A_FIELDS: &'static [(&'static str, LayoutField<'static>)] = &[("array",
+                                   StructArrayField(&[&QUX_LAYOUT_0,
+                                                      &QUX_LAYOUT_1]))];
+
 fn make_foo_layout() -> FooLayout {
     FooLayout::load_layout(&FOO_FIELDS).unwrap()
 }
@@ -95,6 +129,10 @@ fn make_primitive_array_layout() -> PrimitiveArrayLayout {
 
 fn make_matrix_array_layout() -> MatrixArrayLayout {
     MatrixArrayLayout::load_layout(&M_A_FIELDS).unwrap()
+}
+
+fn make_struct_array_layout() -> StructArrayLayout {
+    StructArrayLayout::load_layout(&S_A_FIELDS).unwrap()
 }
 
 fn new_foo() -> Foo {
@@ -308,4 +346,30 @@ fn matrix_array() {
     assert_eq!(acc.array[1][1][0], 221.0);
     assert_eq!(acc.array[1][1][1], 222.0);
     assert_eq!(acc.array[1][1][2], 223.0);
+}
+
+#[test]
+fn struct_array() {
+    let layout = make_struct_array_layout();
+    let mut sa = StructArray {
+        array: [Qux {
+            one: 0.0,
+            four: Vec4 { x: 0.0, y: 1.0, z: 2.0, w: 3.0 },
+        }, Qux {
+            one: 1.0,
+            four: Vec4 { x: 10.0, y: 11.0, z: 12.0, w: 13.0 },
+        }]
+    };
+    let mut bytes: &mut [u8] = unsafe { &mut *(&mut sa as *mut StructArray as *mut [u8; 40]) };
+    let acc = layout.accessor(bytes);
+    assert_eq!(*acc.array[0].one, 0.0);
+    assert_eq!(*acc.array[1].one, 1.0);
+    assert_eq!(acc.array[0].four.x, 0.0);
+    assert_eq!(acc.array[0].four.y, 1.0);
+    assert_eq!(acc.array[0].four.z, 2.0);
+    assert_eq!(acc.array[0].four.w, 3.0);
+    assert_eq!(acc.array[1].four.x, 10.0);
+    assert_eq!(acc.array[1].four.y, 11.0);
+    assert_eq!(acc.array[1].four.z, 12.0);
+    assert_eq!(acc.array[1].four.w, 13.0);
 }

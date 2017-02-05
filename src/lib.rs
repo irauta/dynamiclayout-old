@@ -63,6 +63,15 @@ pub trait LoadStructLayout {
     fn get_field_layout(&self, field_name: &str) -> Option<&LayoutField>;
 }
 
+impl<'a> LoadStructLayout for LayoutField<'a> {
+    fn get_field_layout(&self, field_name: &str) -> Option<&LayoutField> {
+        match *self {
+            LayoutField::StructField(ref inner) => inner.get_field_layout(field_name),
+            _ => None
+        }
+    }
+}
+
 impl<'a> LoadStructLayout for &'a [(&'a str, ::LayoutField<'a>)] {
     fn get_field_layout(&self, field_name: &str) -> Option<&LayoutField> {
         self.iter().find(|x| x.0 == field_name).map(|x| &x.1)
