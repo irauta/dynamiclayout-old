@@ -1,8 +1,11 @@
 
-use vector_types::{Vec2, Vec3, Vec4};
-use matrix_types::Matrix4;
-use {LayoutDynamicField, LayoutField};
-use LayoutField::*;
+#[macro_use]
+extern crate dynamiclayout;
+
+use dynamiclayout::vector_types::{Vec2, Vec3, Vec4};
+use dynamiclayout::matrix_types::Matrix4;
+use dynamiclayout::{LayoutDynamicField, LayoutField};
+use dynamiclayout::LayoutField::*;
 
 #[repr(C, packed)]
 #[derive(Debug, Copy, Clone)]
@@ -46,8 +49,8 @@ pub struct StructArray {
 }
 
 mod layout_types {
-    use vector_types::{Vec2, Vec3, Vec4};
-    use matrix_types::{Matrix2x3, Matrix4};
+    use dynamiclayout::vector_types::{Vec2, Vec3, Vec4};
+    use dynamiclayout::matrix_types::{Matrix2x3, Matrix4};
 
     dynamiclayout!(FooLayout + FooAccessor {
         three: Vec3,
@@ -249,10 +252,8 @@ fn matrix_bytes() -> [u8; 64] {
 }
 
 fn matrix_layout() -> MatrixLayout {
-    let mut layout: MatrixLayout = Default::default();
-    layout.matrix.offset = 0;
-    layout.matrix.stride = 16;
-    layout
+    const LAYOUT: &'static [(&'static str, LayoutField<'static>)] = &[("matrix", ArrayField(0, 16))];
+    MatrixLayout::load_layout(&LAYOUT).unwrap()
 }
 
 #[test]

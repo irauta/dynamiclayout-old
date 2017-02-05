@@ -242,6 +242,3 @@ macro_rules! impl_struct_array {
 }
 
 repeat_macro!(impl_struct_array);
-
-#[cfg(test)]
-mod tests;
