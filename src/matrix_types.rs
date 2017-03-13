@@ -1,16 +1,16 @@
 
 use std::ops::{Index, IndexMut};
-use {LayoutField, ArrayField, MatrixArrayField, LayoutDynamicField, AccessDynamicField, FieldSpan,
+use {LayoutInfo, ArrayFieldLayout, MatrixArrayFieldLayout, LayoutDynamicField, AccessDynamicField, FieldSpan,
      OffsetType, LengthType};
 
 macro_rules! impl_matrix_type_array {
     ($array_size:expr, $matrix_type:ident [$column_count:expr][$row_count:expr]) => (
         impl LayoutDynamicField for [$matrix_type; $array_size] {
-            type Layout = MatrixArrayField;
+            type Layout = MatrixArrayFieldLayout;
 
-            fn make_layout(layout_field: &LayoutField) -> Result<Self::Layout, ()> {
-                if let LayoutField::MatrixArrayField(offset, array_stride, matrix_stride) = *layout_field {
-                    Ok(MatrixArrayField { offset: offset, array_stride: array_stride, matrix_stride: matrix_stride })
+            fn make_layout(layout_field: &LayoutInfo) -> Result<Self::Layout, ()> {
+                if let LayoutInfo::MatrixArrayField(offset, array_stride, matrix_stride) = *layout_field {
+                    Ok(MatrixArrayFieldLayout { offset: offset, array_stride: array_stride, matrix_stride: matrix_stride })
                 } else {
                     Err(())
                 }
@@ -35,7 +35,7 @@ macro_rules! impl_matrix_type_array {
                 for i in 0..array.len() {
                     let offset = (i as OffsetType) * layout.array_stride + layout.offset;
                     // The pointer given to accessor_from_layout already has the offset calculated, therefore use 0 here
-                    let matrix_layout = ArrayField { offset: 0, stride: layout.matrix_stride };
+                    let matrix_layout = ArrayFieldLayout { offset: 0, stride: layout.matrix_stride };
                     array[i] = $matrix_type::accessor_from_layout(&matrix_layout, bytes.offset(offset as isize));
                 }
                 array
@@ -78,11 +78,11 @@ macro_rules! make_matrix_type {
         }
 
         impl LayoutDynamicField for $matrix_type {
-            type Layout = ArrayField;
+            type Layout = ArrayFieldLayout;
 
-            fn make_layout(layout_field: &::LayoutField) -> Result<Self::Layout, ()> {
-                if let ::LayoutField::ArrayField (offset, stride) = *layout_field {
-                    Ok(ArrayField { offset: offset, stride: stride })
+            fn make_layout(layout_field: &::LayoutInfo) -> Result<Self::Layout, ()> {
+                if let ::LayoutInfo::ArrayField (offset, stride) = *layout_field {
+                    Ok(ArrayFieldLayout { offset: offset, stride: stride })
                 } else {
                     Err(())
                 }

@@ -4,8 +4,8 @@ extern crate dynamiclayout;
 
 use dynamiclayout::vector_types::{Vec2, Vec3, Vec4};
 use dynamiclayout::matrix_types::Matrix4;
-use dynamiclayout::{LayoutDynamicField, LayoutField};
-use dynamiclayout::LayoutField::*;
+use dynamiclayout::{LayoutDynamicField, LayoutInfo};
+use dynamiclayout::LayoutInfo::*;
 
 #[repr(C, packed)]
 #[derive(Debug, Copy, Clone)]
@@ -90,35 +90,35 @@ mod layout_types {
 
 use self::layout_types::*;
 
-const BAR_FIELDS: &'static [(&'static str, LayoutField<'static>)] = &[("one", PrimitiveField(40)),
+const BAR_FIELDS: &'static [(&'static str, LayoutInfo<'static>)] = &[("one", PrimitiveField(40)),
                                                                       ("four", PrimitiveField(44)),
                                                                       ("matrix",
                                                                        ArrayField(60, 16))];
-const BAR_LAYOUT: LayoutField<'static> = StructField(&BAR_FIELDS);
+const BAR_LAYOUT: LayoutInfo<'static> = StructField(&BAR_FIELDS);
 
-const FOO_FIELDS: &'static [(&'static str, LayoutField<'static>)] = &[("three", PrimitiveField(0)),
+const FOO_FIELDS: &'static [(&'static str, LayoutInfo<'static>)] = &[("three", PrimitiveField(0)),
                                                                       ("one", PrimitiveField(12)),
                                                                       ("four", PrimitiveField(16)),
                                                                       ("two", PrimitiveField(32)),
                                                                       ("compound", BAR_LAYOUT)];
 
-const P_A_FIELDS: &'static [(&'static str, LayoutField<'static>)] = &[("first", PrimitiveField(0)),
+const P_A_FIELDS: &'static [(&'static str, LayoutInfo<'static>)] = &[("first", PrimitiveField(0)),
                                                                       ("array", ArrayField(4, 4)),
                                                                       ("last", PrimitiveField(36))];
 
 // Note that the matrices in the array are interleaved!
-const M_A_FIELDS: &'static [(&'static str, LayoutField<'static>)] = &[("array",
+const M_A_FIELDS: &'static [(&'static str, LayoutInfo<'static>)] = &[("array",
                                                                        MatrixArrayField(0, 12, 24))];
 
-const QUX_FIELDS_0: &'static [(&'static str, LayoutField<'static>)] = &[("one", PrimitiveField(0)),
+const QUX_FIELDS_0: &'static [(&'static str, LayoutInfo<'static>)] = &[("one", PrimitiveField(0)),
                                                                       ("four", PrimitiveField(4))];
 
-const QUX_FIELDS_1: &'static [(&'static str, LayoutField<'static>)] = &[("one", PrimitiveField(20)),
+const QUX_FIELDS_1: &'static [(&'static str, LayoutInfo<'static>)] = &[("one", PrimitiveField(20)),
                                                                       ("four", PrimitiveField(24))];
 
-const QUX_LAYOUT_0: LayoutField<'static> = StructField(&QUX_FIELDS_0);
-const QUX_LAYOUT_1: LayoutField<'static> = StructField(&QUX_FIELDS_1);
-const S_A_FIELDS: &'static [(&'static str, LayoutField<'static>)] = &[("array",
+const QUX_LAYOUT_0: LayoutInfo<'static> = StructField(&QUX_FIELDS_0);
+const QUX_LAYOUT_1: LayoutInfo<'static> = StructField(&QUX_FIELDS_1);
+const S_A_FIELDS: &'static [(&'static str, LayoutInfo<'static>)] = &[("array",
                                    StructArrayField(&[&QUX_LAYOUT_0,
                                                       &QUX_LAYOUT_1]))];
 
@@ -252,7 +252,7 @@ fn matrix_bytes() -> [u8; 64] {
 }
 
 fn matrix_layout() -> MatrixLayout {
-    const LAYOUT: &'static [(&'static str, LayoutField<'static>)] = &[("matrix", ArrayField(0, 16))];
+    const LAYOUT: &'static [(&'static str, LayoutInfo<'static>)] = &[("matrix", ArrayField(0, 16))];
     MatrixLayout::load_layout(&LAYOUT).unwrap()
 }
 

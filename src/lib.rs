@@ -51,7 +51,7 @@ pub use matrix_types::*;
 
 pub trait StructField<'a> : AccessDynamicField<'a> {}
 
-pub enum LayoutField<'a> {
+pub enum LayoutInfo<'a> {
     PrimitiveField(OffsetType),
     ArrayField(OffsetType, StrideType),
     MatrixArrayField(OffsetType, StrideType, StrideType),
@@ -60,43 +60,43 @@ pub enum LayoutField<'a> {
 }
 
 pub trait LoadStructLayout {
-    fn get_field_layout(&self, field_name: &str) -> Option<&LayoutField>;
+    fn get_field_layout(&self, field_name: &str) -> Option<&LayoutInfo>;
 }
 
-impl<'a> LoadStructLayout for LayoutField<'a> {
-    fn get_field_layout(&self, field_name: &str) -> Option<&LayoutField> {
+impl<'a> LoadStructLayout for LayoutInfo<'a> {
+    fn get_field_layout(&self, field_name: &str) -> Option<&LayoutInfo> {
         match *self {
-            LayoutField::StructField(ref inner) => inner.get_field_layout(field_name),
+            LayoutInfo::StructField(ref inner) => inner.get_field_layout(field_name),
             _ => None
         }
     }
 }
 
-impl<'a> LoadStructLayout for &'a [(&'a str, ::LayoutField<'a>)] {
-    fn get_field_layout(&self, field_name: &str) -> Option<&LayoutField> {
+impl<'a> LoadStructLayout for &'a [(&'a str, ::LayoutInfo<'a>)] {
+    fn get_field_layout(&self, field_name: &str) -> Option<&LayoutInfo> {
         self.iter().find(|x| x.0 == field_name).map(|x| &x.1)
     }
 }
 
 
 #[derive(Default, Debug)]
-pub struct DynamicField {
+pub struct SimpleFieldLayout {
     offset: OffsetType,
 }
 
-impl DynamicField {
+impl SimpleFieldLayout {
     pub unsafe fn offset_ptr(&self, ptr: *mut u8) -> *mut u8 {
         ptr.offset(self.offset as isize)
     }
 }
 
 #[derive(Default, Debug)]
-pub struct ArrayField {
+pub struct ArrayFieldLayout {
     offset: OffsetType,
     stride: StrideType,
 }
 
-impl ArrayField {
+impl ArrayFieldLayout {
     pub unsafe fn offset_ptr(&self, ptr: *mut u8, index: usize) -> *mut u8 {
         let total_offset: isize = self.offset as isize + self.stride as isize * index as isize;
         ptr.offset(total_offset)
@@ -104,7 +104,7 @@ impl ArrayField {
 }
 
 #[derive(Default, Debug)]
-pub struct MatrixArrayField {
+pub struct MatrixArrayFieldLayout {
     offset: OffsetType,
     array_stride: StrideType,
     matrix_stride: StrideType,
@@ -120,7 +120,7 @@ pub struct FieldSpan {
 pub trait LayoutDynamicField {
     type Layout;
 
-    fn make_layout(layout_field: &LayoutField) -> Result<Self::Layout, ()>;
+    fn make_layout(layout_field: &LayoutInfo) -> Result<Self::Layout, ()>;
 
     fn get_field_spans(layout: &Self::Layout) -> Box<Iterator<Item = FieldSpan>>;
 }
@@ -146,7 +146,7 @@ macro_rules! dynamiclayout {
         impl $layout_struct_name {
             #[allow(dead_code)]
             pub fn load_layout(layout: &$crate::LoadStructLayout) -> Result<$layout_struct_name, ()> {
-                <$layout_struct_name as $crate::LayoutDynamicField>::make_layout(&$crate::LayoutField::StructField(layout))
+                <$layout_struct_name as $crate::LayoutDynamicField>::make_layout(&$crate::LayoutInfo::StructField(layout))
             }
 
             #[allow(dead_code)]
@@ -160,8 +160,8 @@ macro_rules! dynamiclayout {
         impl $crate::LayoutDynamicField for $layout_struct_name {
             type Layout = $layout_struct_name;
 
-            fn make_layout(layout: &$crate::LayoutField) -> Result<Self::Layout, ()> {
-                if let $crate::LayoutField::StructField(ref layout) = *layout {
+            fn make_layout(layout: &$crate::LayoutInfo) -> Result<Self::Layout, ()> {
+                if let $crate::LayoutInfo::StructField(ref layout) = *layout {
                     Ok($layout_struct_name {
                         $($field_name: try!(layout
                             .get_field_layout(stringify!($field_name))
@@ -205,14 +205,14 @@ macro_rules! impl_struct_array {
         impl<'a, T> LayoutDynamicField for [T; $length] where T: StructField<'a> {
             type Layout = [<T as LayoutDynamicField>::Layout; $length];
 
-            fn make_layout(layout: &LayoutField) -> Result<Self::Layout, ()> {
-                if let $crate::LayoutField::StructArrayField(ref layouts) = *layout {
+            fn make_layout(layout: &LayoutInfo) -> Result<Self::Layout, ()> {
+                if let $crate::LayoutInfo::StructArrayField(ref layouts) = *layout {
                     let mut array: Self::Layout = unsafe { ::std::mem::zeroed() };
                     if array.len() != layouts.len() {
                         return Err(());
                     }
                     for i in 0..array.len() {
-                        let layout_field = LayoutField::StructField(layouts[i]);
+                        let layout_field = LayoutInfo::StructField(layouts[i]);
                         array[i] = try!(<T as LayoutDynamicField>::make_layout(&layout_field));
                     }
                     Ok(array)

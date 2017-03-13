@@ -1,7 +1,7 @@
 
 use std::marker::PhantomData;
 use std::ops::{Index, IndexMut};
-use {FieldSpan, LayoutField, DynamicField, ArrayField, LayoutDynamicField, AccessDynamicField,
+use {FieldSpan, LayoutInfo, SimpleFieldLayout, ArrayFieldLayout, LayoutDynamicField, AccessDynamicField,
      LengthType, OffsetType, StrideType};
 use vector_types::*;
 
@@ -40,11 +40,11 @@ impl<'a, T: 'a> IndexMut<usize> for PrimitiveArrayAccessor<'a, T> {
 macro_rules! impl_primitive_type_array {
     ($array_size:expr, $primitive_type:ty) => (
         impl LayoutDynamicField for [$primitive_type; $array_size] {
-            type Layout = ArrayField;
+            type Layout = ArrayFieldLayout;
 
-            fn make_layout(layout_field: &LayoutField) -> Result<Self::Layout, ()> {
-                if let LayoutField::ArrayField(offset, stride) = *layout_field {
-                    Ok(ArrayField { offset: offset, stride: stride })
+            fn make_layout(layout_field: &LayoutInfo) -> Result<Self::Layout, ()> {
+                if let LayoutInfo::ArrayField(offset, stride) = *layout_field {
+                    Ok(ArrayFieldLayout { offset: offset, stride: stride })
                 } else {
                     Err(())
                 }
@@ -79,11 +79,11 @@ macro_rules! impl_primitive_type {
 
     ($primitive_type:ty) => (
         impl LayoutDynamicField for $primitive_type {
-            type Layout = DynamicField;
+            type Layout = SimpleFieldLayout;
 
-            fn make_layout(layout_field: &LayoutField) -> Result<Self::Layout, ()> {
-                if let LayoutField::PrimitiveField(offset) = *layout_field {
-                    Ok(DynamicField { offset: offset })
+            fn make_layout(layout_field: &LayoutInfo) -> Result<Self::Layout, ()> {
+                if let LayoutInfo::PrimitiveField(offset) = *layout_field {
+                    Ok(SimpleFieldLayout { offset: offset })
                 } else {
                     Err(())
                 }
