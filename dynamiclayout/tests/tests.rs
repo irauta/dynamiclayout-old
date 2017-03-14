@@ -267,26 +267,6 @@ fn dynamic_matrix_indexing() {
 }
 
 #[test]
-#[should_panic(expected = "index out of bounds")]
-fn dynamic_matrix_out_of_bounds_1() {
-    let layout = matrix_layout();
-    let mut bytes = matrix_bytes();
-    let mut acc = layout.accessor(&mut bytes);
-    // Cause panic when accessing the outer array
-    acc.matrix[4][0] = 1.0;
-}
-
-#[test]
-#[should_panic(expected = "index out of bounds")]
-fn dynamic_matrix_out_of_bounds_2() {
-    let layout = matrix_layout();
-    let mut bytes = matrix_bytes();
-    let mut acc = layout.accessor(&mut bytes);
-    // Cause panic when accessing the nested array
-    acc.matrix[0][4] = 1.0;
-}
-
-#[test]
 fn field_spans() {
     let layout = make_foo_layout();
     let spans: Vec<_> =
