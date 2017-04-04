@@ -28,7 +28,7 @@ impl<'a> LoadStructLayout for LayoutInfo<'a> {
     fn get_field_layout(&self, field_name: &str) -> Option<&LayoutInfo> {
         match *self {
             LayoutInfo::StructField(ref inner) => inner.get_field_layout(field_name),
-            _ => None
+            _ => None,
         }
     }
 }
@@ -103,5 +103,8 @@ pub trait AccessDynamicField<'a>: LayoutDynamicField {
 pub trait AccessArrayDynamicField<'a>: LayoutArrayDynamicField {
     type Accessor: 'a;
 
-    unsafe fn accessor_from_layout(layout: &'a Self::Layout, bytes: *mut u8, len: usize) -> Self::Accessor;
+    unsafe fn accessor_from_layout(layout: &'a Self::Layout,
+                                   bytes: *mut u8,
+                                   len: usize)
+                                   -> Self::Accessor;
 }

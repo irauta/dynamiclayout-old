@@ -1,7 +1,7 @@
 
 use std::ops::{Index, IndexMut};
-use {LayoutInfo, ArrayFieldLayout, MatrixArrayFieldLayout, LayoutDynamicField, AccessDynamicField, FieldSpan,
-     OffsetType, LengthType, LayoutArrayDynamicField, AccessArrayDynamicField};
+use {LayoutInfo, ArrayFieldLayout, MatrixArrayFieldLayout, LayoutDynamicField, AccessDynamicField,
+     FieldSpan, OffsetType, LengthType, LayoutArrayDynamicField, AccessArrayDynamicField};
 
 macro_rules! make_matrix_type {
     ($matrix_type:ident [$column_count:expr][$row_count:expr] $($field:expr),+) => (

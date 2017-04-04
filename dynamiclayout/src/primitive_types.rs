@@ -1,8 +1,9 @@
 
 use std::marker::PhantomData;
 use std::ops::{Index, IndexMut};
-use {FieldSpan, LayoutInfo, SimpleFieldLayout, ArrayFieldLayout, LayoutDynamicField, AccessDynamicField,
-     LengthType, OffsetType, StrideType, LayoutArrayDynamicField, AccessArrayDynamicField};
+use {FieldSpan, LayoutInfo, SimpleFieldLayout, ArrayFieldLayout, LayoutDynamicField,
+     AccessDynamicField, LengthType, OffsetType, StrideType, LayoutArrayDynamicField,
+     AccessArrayDynamicField};
 use vector_types::*;
 
 pub struct PrimitiveArrayAccessor<'a, T: 'a> {
