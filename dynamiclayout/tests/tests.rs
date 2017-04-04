@@ -1,14 +1,16 @@
 
-#[macro_use]
 extern crate dynamiclayout;
 
+#[macro_use]
+extern crate dynamiclayout_derive;
+
 use dynamiclayout::vector_types::{Vec2, Vec3, Vec4};
-use dynamiclayout::matrix_types::Matrix4;
+use dynamiclayout::matrix_types::{Matrix4, Matrix2x3};
 use dynamiclayout::{LayoutDynamicField, LayoutInfo};
 use dynamiclayout::LayoutInfo::*;
 
 #[repr(C, packed)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, DynamicLayout)]
 pub struct Foo {
     pub three: Vec3,
     pub one: f32,
@@ -20,7 +22,7 @@ pub struct Foo {
 const FOO_SIZE: usize = 124;
 
 #[repr(C, packed)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, DynamicLayout)]
 pub struct Bar {
     pub one: f32,
     pub four: Vec4,
@@ -28,14 +30,14 @@ pub struct Bar {
 }
 
 #[repr(C, packed)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, DynamicLayout)]
 pub struct Qux {
     pub one: f32,
     pub four: Vec4,
 }
 
 #[repr(C, packed)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, DynamicLayout)]
 pub struct PrimitiveArray {
     pub first: i32,
     pub array: [i32; 8],
@@ -43,52 +45,16 @@ pub struct PrimitiveArray {
 }
 
 #[repr(C, packed)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, DynamicLayout)]
 pub struct StructArray {
     pub array: [Qux; 2],
 }
 
-mod layout_types {
-    use dynamiclayout::vector_types::{Vec2, Vec3, Vec4};
-    use dynamiclayout::matrix_types::{Matrix2x3, Matrix4};
-
-    dynamiclayout!(FooLayout + FooAccessor {
-        three: Vec3,
-        one: f32,
-        four: Vec4,
-        two: Vec2,
-        compound: BarLayout
-    });
-
-    dynamiclayout!(BarLayout + BarAccessor {
-        one: f32,
-        four: Vec4,
-        matrix: Matrix4
-    });
-
-    dynamiclayout!(PrimitiveArrayLayout + PrimitiveArrayAccessor {
-        first: i32,
-        array: [i32; 8],
-        last: i32
-    });
-
-    dynamiclayout!(MatrixArrayLayout + MatrixArrayAccessor {
-        array: [Matrix2x3; 2]
-    });
-
-    dynamiclayout!(QuxLayout + QuxAccessor {
-        one: f32,
-        four: Vec4
-    });
-
-    dynamiclayout!(StructArrayLayout + StructArrayAccessor {
-        array: [QuxLayout; 2]
-    });
+#[repr(C, packed)]
+#[derive(Debug, Copy, Clone, DynamicLayout)]
+pub struct MatrixArray {
+    array: [Matrix2x3; 2]
 }
-
-
-
-use self::layout_types::*;
 
 const BAR_FIELDS: &'static [(&'static str, LayoutInfo<'static>)] = &[("one", PrimitiveField(40)),
                                                                       ("four", PrimitiveField(44)),
@@ -123,19 +89,19 @@ const S_A_FIELDS: &'static [(&'static str, LayoutInfo<'static>)] = &[("array",
                                                       &QUX_LAYOUT_1]))];
 
 fn make_foo_layout() -> FooLayout {
-    FooLayout::load_layout(&FOO_FIELDS).unwrap()
+    Foo::load_layout(&FOO_FIELDS).unwrap()
 }
 
 fn make_primitive_array_layout() -> PrimitiveArrayLayout {
-    PrimitiveArrayLayout::load_layout(&P_A_FIELDS).unwrap()
+    PrimitiveArray::load_layout(&P_A_FIELDS).unwrap()
 }
 
 fn make_matrix_array_layout() -> MatrixArrayLayout {
-    MatrixArrayLayout::load_layout(&M_A_FIELDS).unwrap()
+    MatrixArray::load_layout(&M_A_FIELDS).unwrap()
 }
 
 fn make_struct_array_layout() -> StructArrayLayout {
-    StructArrayLayout::load_layout(&S_A_FIELDS).unwrap()
+    StructArray::load_layout(&S_A_FIELDS).unwrap()
 }
 
 fn new_foo() -> Foo {
@@ -241,9 +207,11 @@ fn vector_out_of_bounds() {
     vec[4] = 4.0;
 }
 
-dynamiclayout!(MatrixLayout + MatrixAccessor {
+#[repr(C, packed)]
+#[derive(Debug, Copy, Clone, DynamicLayout)]
+pub struct Matrix {
     matrix: Matrix4
-});
+}
 
 const MATRIX: [[f32; 4]; 4] = [[0.0f32; 4]; 4];
 
@@ -253,7 +221,7 @@ fn matrix_bytes() -> [u8; 64] {
 
 fn matrix_layout() -> MatrixLayout {
     const LAYOUT: &'static [(&'static str, LayoutInfo<'static>)] = &[("matrix", ArrayField(0, 16))];
-    MatrixLayout::load_layout(&LAYOUT).unwrap()
+    Matrix::load_layout(&LAYOUT).unwrap()
 }
 
 #[test]
@@ -270,7 +238,7 @@ fn dynamic_matrix_indexing() {
 fn field_spans() {
     let layout = make_foo_layout();
     let spans: Vec<_> =
-        <FooLayout as LayoutDynamicField>::get_field_spans(&layout).collect();
+        <Foo as LayoutDynamicField>::get_field_spans(&layout).collect();
     println!("{:?}", spans);
     let min = spans.iter().min_by_key(|span| span.offset).unwrap();
     assert_eq!(min.offset, 0);

@@ -2,7 +2,7 @@
 use std::marker::PhantomData;
 use std::ops::{Index, IndexMut};
 use {FieldSpan, LayoutInfo, SimpleFieldLayout, ArrayFieldLayout, LayoutDynamicField, AccessDynamicField,
-     LengthType, OffsetType, StrideType};
+     LengthType, OffsetType, StrideType, LayoutArrayDynamicField, AccessArrayDynamicField};
 use vector_types::*;
 
 pub struct PrimitiveArrayAccessor<'a, T: 'a> {
@@ -37,44 +37,6 @@ impl<'a, T: 'a> IndexMut<usize> for PrimitiveArrayAccessor<'a, T> {
     }
 }
 
-macro_rules! impl_primitive_type_array {
-    ($array_size:expr, $primitive_type:ty) => (
-        impl LayoutDynamicField for [$primitive_type; $array_size] {
-            type Layout = ArrayFieldLayout;
-
-            fn make_layout(layout_field: &LayoutInfo) -> Result<Self::Layout, ()> {
-                if let LayoutInfo::ArrayField(offset, stride) = *layout_field {
-                    Ok(ArrayFieldLayout { offset: offset, stride: stride })
-                } else {
-                    Err(())
-                }
-            }
-
-            fn get_field_spans(layout: &Self::Layout) -> Box<Iterator<Item=FieldSpan>> {
-                let offset = layout.offset;
-                let stride = layout.stride;
-                Box::new((0..$array_size).map(move |i| FieldSpan {
-                    offset: (offset + stride * i) as OffsetType,
-                    length: ::std::mem::size_of::<$primitive_type>() as LengthType,
-                }))
-            }
-        }
-
-        impl<'a> AccessDynamicField<'a> for [$primitive_type; $array_size] {
-            type Accessor = PrimitiveArrayAccessor<'a, $primitive_type>;
-
-            unsafe fn accessor_from_layout(layout: &'a Self::Layout, bytes: *mut u8) -> Self::Accessor {
-                PrimitiveArrayAccessor {
-                    bytes: bytes.offset(layout.offset as isize),
-                    stride: layout.stride,
-                    length: $array_size,
-                    phantom: PhantomData,
-                }
-            }
-        }
-    );
-}
-
 macro_rules! impl_primitive_type {
 
     ($primitive_type:ty) => (
@@ -106,10 +68,41 @@ macro_rules! impl_primitive_type {
             }
         }
 
-        repeat_macro!(impl_primitive_type_array, $primitive_type);
+        impl LayoutArrayDynamicField for $primitive_type {
+            type Layout = ArrayFieldLayout;
+
+            fn make_layout(layout_field: &LayoutInfo, _: usize) -> Result<Self::Layout, ()> {
+                if let LayoutInfo::ArrayField(offset, stride) = *layout_field {
+                    Ok(ArrayFieldLayout { offset: offset, stride: stride })
+                } else {
+                    Err(())
+                }
+            }
+
+            fn get_field_spans(layout: &Self::Layout, len: usize) -> Box<Iterator<Item=FieldSpan>> {
+                let offset = layout.offset;
+                let stride = layout.stride;
+                Box::new((0..len as u16).map(move |i| FieldSpan {
+                    offset: (offset + stride * i) as OffsetType,
+                    length: ::std::mem::size_of::<$primitive_type>() as LengthType,
+                }))
+            }
+        }
+
+        impl<'a> AccessArrayDynamicField<'a> for $primitive_type {
+            type Accessor = PrimitiveArrayAccessor<'a, $primitive_type>;
+
+            unsafe fn accessor_from_layout(layout: &'a Self::Layout, bytes: *mut u8, len: usize) -> Self::Accessor {
+                PrimitiveArrayAccessor {
+                    bytes: bytes.offset(layout.offset as isize),
+                    stride: layout.stride,
+                    length: len,
+                    phantom: PhantomData,
+                }
+            }
+        }
     );
 
-    //($repetitions:expr, array_impl $primitive_type:ty) => ();
 }
 
 impl_primitive_type!(f32);

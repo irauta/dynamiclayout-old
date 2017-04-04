@@ -1,48 +1,7 @@
 
 use std::ops::{Index, IndexMut};
 use {LayoutInfo, ArrayFieldLayout, MatrixArrayFieldLayout, LayoutDynamicField, AccessDynamicField, FieldSpan,
-     OffsetType, LengthType};
-
-macro_rules! impl_matrix_type_array {
-    ($array_size:expr, $matrix_type:ident [$column_count:expr][$row_count:expr]) => (
-        impl LayoutDynamicField for [$matrix_type; $array_size] {
-            type Layout = MatrixArrayFieldLayout;
-
-            fn make_layout(layout_field: &LayoutInfo) -> Result<Self::Layout, ()> {
-                if let LayoutInfo::MatrixArrayField(offset, array_stride, matrix_stride) = *layout_field {
-                    Ok(MatrixArrayFieldLayout { offset: offset, array_stride: array_stride, matrix_stride: matrix_stride })
-                } else {
-                    Err(())
-                }
-            }
-
-            fn get_field_spans(layout: &Self::Layout) -> Box<Iterator<Item=FieldSpan>> {
-                let offset = layout.offset;
-                let array_stride = layout.array_stride;
-                let matrix_stride = layout.matrix_stride;
-                Box::new((0..$array_size).flat_map(move |i| (0..$row_count).map(move |r| FieldSpan {
-                    offset: (offset + array_stride * i + matrix_stride * r) as OffsetType,
-                    length: ::std::mem::size_of::<f32>() as LengthType * $column_count as LengthType,
-                })))
-            }
-        }
-
-        impl<'a> AccessDynamicField<'a> for [$matrix_type; $array_size] {
-            type Accessor = [<$matrix_type as AccessDynamicField<'a>>::Accessor; $array_size];
-
-            unsafe fn accessor_from_layout(layout: &'a Self::Layout, bytes: *mut u8) -> Self::Accessor {
-                let mut array: Self::Accessor = ::std::mem::zeroed();
-                for i in 0..array.len() {
-                    let offset = (i as OffsetType) * layout.array_stride + layout.offset;
-                    // The pointer given to accessor_from_layout already has the offset calculated, therefore use 0 here
-                    let matrix_layout = ArrayFieldLayout { offset: 0, stride: layout.matrix_stride };
-                    array[i] = $matrix_type::accessor_from_layout(&matrix_layout, bytes.offset(offset as isize));
-                }
-                array
-            }
-        }
-    )
-}
+     OffsetType, LengthType, LayoutArrayDynamicField, AccessArrayDynamicField};
 
 macro_rules! make_matrix_type {
     ($matrix_type:ident [$column_count:expr][$row_count:expr] $($field:expr),+) => (
@@ -107,7 +66,44 @@ macro_rules! make_matrix_type {
             }
         }
 
-        repeat_macro!(impl_matrix_type_array, $matrix_type [$column_count][$row_count]);
+        impl LayoutArrayDynamicField for $matrix_type {
+            type Layout = MatrixArrayFieldLayout;
+
+            fn make_layout(layout_field: &LayoutInfo, _: usize) -> Result<Self::Layout, ()> {
+                if let LayoutInfo::MatrixArrayField(offset, array_stride, matrix_stride) = *layout_field {
+                    Ok(MatrixArrayFieldLayout { offset: offset, array_stride: array_stride, matrix_stride: matrix_stride })
+                } else {
+                    Err(())
+                }
+            }
+
+            fn get_field_spans(layout: &Self::Layout, len: usize) -> Box<Iterator<Item=FieldSpan>> {
+                let offset = layout.offset;
+                let array_stride = layout.array_stride;
+                let matrix_stride = layout.matrix_stride;
+                Box::new((0..len as u16).flat_map(move |i| (0..$row_count).map(move |r| FieldSpan {
+                    offset: (offset + array_stride * i + matrix_stride * r) as OffsetType,
+                    length: ::std::mem::size_of::<f32>() as LengthType * $column_count as LengthType,
+                })))
+            }
+        }
+
+        impl<'a> AccessArrayDynamicField<'a> for $matrix_type {
+            type Accessor = Vec<<$matrix_type as AccessDynamicField<'a>>::Accessor>;
+
+            unsafe fn accessor_from_layout(layout: &'a Self::Layout, bytes: *mut u8, len: usize) -> Self::Accessor {
+                let mut accessor = Vec::with_capacity(len);
+                for i in 0..len {
+                    let offset = (i as OffsetType) * layout.array_stride + layout.offset;
+                    // The pointer given to accessor_from_layout already has the offset calculated, therefore use 0 here
+                    let matrix_layout = ArrayFieldLayout { offset: 0, stride: layout.matrix_stride };
+                    accessor.push($matrix_type::accessor_from_layout(&matrix_layout, bytes.offset(offset as isize)));
+                }
+                accessor
+            }
+        }
+
+
     );
 }
 
