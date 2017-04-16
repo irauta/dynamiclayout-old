@@ -20,6 +20,7 @@ pub enum LayoutInfo<'a> {
     StructArrayField(&'a [&'a LoadStructLayout]),
 }
 
+
 pub trait LoadStructLayout {
     fn get_field_layout(&self, field_name: &str) -> Option<&LayoutInfo>;
 }
@@ -76,6 +77,10 @@ pub struct MatrixArrayFieldLayout {
 pub struct FieldSpan {
     pub offset: OffsetType,
     pub length: LengthType,
+}
+
+pub trait DynamicLayout : LayoutDynamicField {
+    fn load_layout(layout_info: &LoadStructLayout) -> Result<<Self as LayoutDynamicField>::Layout, ()>;
 }
 
 pub trait LayoutDynamicField {

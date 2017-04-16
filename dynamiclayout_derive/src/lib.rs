@@ -30,9 +30,9 @@ fn make_types(ast: &DeriveInput) -> Tokens {
         let accessor_init = accessor_init(fields);
         quote! {
 
-            impl #original_name {
+            impl dynamiclayout::DynamicLayout for #original_name {
                 #[allow(dead_code)]
-                pub fn load_layout(layout: &dynamiclayout::LoadStructLayout) -> Result<#layout_name, ()> {
+                fn load_layout(layout: &dynamiclayout::LoadStructLayout) -> Result<#layout_name, ()> {
                     <Self as dynamiclayout::LayoutDynamicField>::make_layout(&dynamiclayout::LayoutInfo::StructField(layout))
                 }
             }

@@ -6,7 +6,7 @@ extern crate dynamiclayout_derive;
 
 use dynamiclayout::vector_types::{Vec2, Vec3, Vec4};
 use dynamiclayout::matrix_types::{Matrix4, Matrix2x3};
-use dynamiclayout::{LayoutDynamicField, LayoutInfo};
+use dynamiclayout::{DynamicLayout, LayoutDynamicField, LayoutInfo};
 use dynamiclayout::LayoutInfo::*;
 
 #[repr(C, packed)]
