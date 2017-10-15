@@ -79,7 +79,7 @@ fn make_types(ast: &DeriveInput) -> Tokens {
                 type Layout = Vec<#layout_name>;
 
                 fn make_layout(layout: &dynamiclayout::LayoutInfo, _: usize) -> Result<Self::Layout, ()> {
-                    if let $crate::LayoutInfo::StructArrayField(ref layouts) = *layout {
+                    if let dynamiclayout::LayoutInfo::StructArrayField(ref layouts) = *layout {
                         let mut output = Vec::with_capacity(layouts.len());
                         for input in layouts.iter() {
                             let layout_field = LayoutInfo::StructField(*input);
