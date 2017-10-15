@@ -228,7 +228,7 @@ fn matrix_layout() -> MatrixLayout {
 fn dynamic_matrix_indexing() {
     let layout = matrix_layout();
     let mut bytes = matrix_bytes();
-    let mut acc = layout.accessor(&mut bytes);
+    let acc = layout.accessor(&mut bytes);
     assert_eq!(acc.matrix[0][0], 0.0);
     assert_eq!(acc.matrix[3][3], 0.0);
     acc.matrix[2][2] = 5.0;
@@ -254,7 +254,7 @@ fn primitive_array() {
         array: [1, 2, 3, 4, 5, 6, 7, 8],
         last: 99,
     };
-    let mut bytes: &mut [u8] = unsafe { &mut *(&mut pa as *mut PrimitiveArray as *mut [u8; 40]) };
+    let bytes: &mut [u8] = unsafe { &mut *(&mut pa as *mut PrimitiveArray as *mut [u8; 40]) };
     let mut acc = layout.accessor(bytes);
 
     assert_eq!(*acc.first, 11);
@@ -279,7 +279,7 @@ fn matrix_array() {
                                  [211.0, 212.0, 213.0],
                                  [121.0, 122.0, 123.0],
                                  [221.0, 222.0, 223.0]];
-    let mut bytes: &mut [u8] = unsafe { &mut *(&mut ma as *mut [[f32; 3]; 4] as *mut [u8; 48]) };
+    let bytes: &mut [u8] = unsafe { &mut *(&mut ma as *mut [[f32; 3]; 4] as *mut [u8; 48]) };
     let acc = layout.accessor(bytes);
 
     assert_eq!(acc.array[0][0][0], 111.0);
@@ -309,7 +309,7 @@ fn struct_array() {
             four: Vec4 { x: 10.0, y: 11.0, z: 12.0, w: 13.0 },
         }]
     };
-    let mut bytes: &mut [u8] = unsafe { &mut *(&mut sa as *mut StructArray as *mut [u8; 40]) };
+    let bytes: &mut [u8] = unsafe { &mut *(&mut sa as *mut StructArray as *mut [u8; 40]) };
     let acc = layout.accessor(bytes);
     assert_eq!(*acc.array[0].one, 0.0);
     assert_eq!(*acc.array[1].one, 1.0);
