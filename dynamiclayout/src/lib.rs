@@ -10,8 +10,6 @@ pub mod matrix_types;
 pub use vector_types::*;
 pub use matrix_types::*;
 
-pub trait StructField<'a> : AccessDynamicField<'a> {}
-
 #[derive(Copy, Clone)]
 pub enum LayoutInfo<'a> {
     PrimitiveField(OffsetType),
