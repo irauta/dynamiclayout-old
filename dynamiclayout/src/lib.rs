@@ -12,6 +12,7 @@ pub use matrix_types::*;
 
 pub trait StructField<'a> : AccessDynamicField<'a> {}
 
+#[derive(Copy, Clone)]
 pub enum LayoutInfo<'a> {
     PrimitiveField(OffsetType),
     ArrayField(OffsetType, StrideType),
@@ -22,11 +23,11 @@ pub enum LayoutInfo<'a> {
 
 
 pub trait LoadStructLayout {
-    fn get_field_layout(&self, field_name: &str) -> Option<&LayoutInfo>;
+    fn get_field_layout(&self, field_name: &str) -> Option<LayoutInfo>;
 }
 
 impl<'a> LoadStructLayout for LayoutInfo<'a> {
-    fn get_field_layout(&self, field_name: &str) -> Option<&LayoutInfo> {
+    fn get_field_layout(&self, field_name: &str) -> Option<LayoutInfo> {
         match *self {
             LayoutInfo::StructField(ref inner) => inner.get_field_layout(field_name),
             _ => None,
@@ -35,8 +36,8 @@ impl<'a> LoadStructLayout for LayoutInfo<'a> {
 }
 
 impl<'a> LoadStructLayout for &'a [(&'a str, ::LayoutInfo<'a>)] {
-    fn get_field_layout(&self, field_name: &str) -> Option<&LayoutInfo> {
-        self.iter().find(|x| x.0 == field_name).map(|x| &x.1)
+    fn get_field_layout(&self, field_name: &str) -> Option<LayoutInfo> {
+        self.iter().find(|x| x.0 == field_name).map(|x| x.1)
     }
 }
 
@@ -86,7 +87,7 @@ pub trait DynamicLayout : LayoutDynamicField {
 pub trait LayoutDynamicField {
     type Layout;
 
-    fn make_layout(layout_field: &LayoutInfo) -> Result<Self::Layout, ()>;
+    fn make_layout(layout_field: LayoutInfo) -> Result<Self::Layout, ()>;
 
     fn get_field_spans(layout: &Self::Layout) -> Box<Iterator<Item = FieldSpan>>;
 }
@@ -94,7 +95,7 @@ pub trait LayoutDynamicField {
 pub trait LayoutArrayDynamicField {
     type Layout;
 
-    fn make_layout(layout_field: &LayoutInfo, len: usize) -> Result<Self::Layout, ()>;
+    fn make_layout(layout_field: LayoutInfo, len: usize) -> Result<Self::Layout, ()>;
 
     fn get_field_spans(layout: &Self::Layout, len: usize) -> Box<Iterator<Item = FieldSpan>>;
 }

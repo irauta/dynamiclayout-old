@@ -44,8 +44,8 @@ macro_rules! impl_primitive_type {
         impl LayoutDynamicField for $primitive_type {
             type Layout = SimpleFieldLayout;
 
-            fn make_layout(layout_field: &LayoutInfo) -> Result<Self::Layout, ()> {
-                if let LayoutInfo::PrimitiveField(offset) = *layout_field {
+            fn make_layout(layout_field: LayoutInfo) -> Result<Self::Layout, ()> {
+                if let LayoutInfo::PrimitiveField(offset) = layout_field {
                     Ok(SimpleFieldLayout { offset: offset })
                 } else {
                     Err(())
@@ -72,8 +72,8 @@ macro_rules! impl_primitive_type {
         impl LayoutArrayDynamicField for $primitive_type {
             type Layout = ArrayFieldLayout;
 
-            fn make_layout(layout_field: &LayoutInfo, _: usize) -> Result<Self::Layout, ()> {
-                if let LayoutInfo::ArrayField(offset, stride) = *layout_field {
+            fn make_layout(layout_field: LayoutInfo, _: usize) -> Result<Self::Layout, ()> {
+                if let LayoutInfo::ArrayField(offset, stride) = layout_field {
                     Ok(ArrayFieldLayout { offset: offset, stride: stride })
                 } else {
                     Err(())

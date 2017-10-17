@@ -33,7 +33,7 @@ fn make_types(ast: &DeriveInput) -> Tokens {
             impl dynamiclayout::DynamicLayout for #original_name {
                 #[allow(dead_code)]
                 fn load_layout(layout: &dynamiclayout::LoadStructLayout) -> Result<#layout_name, ()> {
-                    <Self as dynamiclayout::LayoutDynamicField>::make_layout(&dynamiclayout::LayoutInfo::StructField(layout))
+                    <Self as dynamiclayout::LayoutDynamicField>::make_layout(dynamiclayout::LayoutInfo::StructField(layout))
                 }
             }
 
@@ -57,8 +57,8 @@ fn make_types(ast: &DeriveInput) -> Tokens {
             impl dynamiclayout::LayoutDynamicField for #original_name {
                 type Layout = #layout_name;
 
-                fn make_layout(layout: &dynamiclayout::LayoutInfo) -> Result<Self::Layout, ()> {
-                    if let dynamiclayout::LayoutInfo::StructField(ref layout) = *layout {
+                fn make_layout(layout: dynamiclayout::LayoutInfo) -> Result<Self::Layout, ()> {
+                    if let dynamiclayout::LayoutInfo::StructField(ref layout) = layout {
                         Ok(#layout_name {
                             #(#layout_init),*
                         })
@@ -78,12 +78,12 @@ fn make_types(ast: &DeriveInput) -> Tokens {
             impl dynamiclayout::LayoutArrayDynamicField for #original_name {
                 type Layout = Vec<#layout_name>;
 
-                fn make_layout(layout: &dynamiclayout::LayoutInfo, _: usize) -> Result<Self::Layout, ()> {
-                    if let dynamiclayout::LayoutInfo::StructArrayField(ref layouts) = *layout {
+                fn make_layout(layout: dynamiclayout::LayoutInfo, _: usize) -> Result<Self::Layout, ()> {
+                    if let dynamiclayout::LayoutInfo::StructArrayField(ref layouts) = layout {
                         let mut output = Vec::with_capacity(layouts.len());
                         for input in layouts.iter() {
                             let layout_field = LayoutInfo::StructField(*input);
-                            output.push(try!(<#original_name as LayoutDynamicField>::make_layout(&layout_field)));
+                            output.push(try!(<#original_name as LayoutDynamicField>::make_layout(layout_field)));
                         }
                         Ok(output)
                     } else {

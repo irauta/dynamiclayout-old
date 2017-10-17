@@ -39,8 +39,8 @@ macro_rules! make_matrix_type {
         impl LayoutDynamicField for $matrix_type {
             type Layout = ArrayFieldLayout;
 
-            fn make_layout(layout_field: &::LayoutInfo) -> Result<Self::Layout, ()> {
-                if let ::LayoutInfo::ArrayField (offset, stride) = *layout_field {
+            fn make_layout(layout_field: ::LayoutInfo) -> Result<Self::Layout, ()> {
+                if let ::LayoutInfo::ArrayField (offset, stride) = layout_field {
                     Ok(ArrayFieldLayout { offset: offset, stride: stride })
                 } else {
                     Err(())
@@ -69,8 +69,8 @@ macro_rules! make_matrix_type {
         impl LayoutArrayDynamicField for $matrix_type {
             type Layout = MatrixArrayFieldLayout;
 
-            fn make_layout(layout_field: &LayoutInfo, _: usize) -> Result<Self::Layout, ()> {
-                if let LayoutInfo::MatrixArrayField(offset, array_stride, matrix_stride) = *layout_field {
+            fn make_layout(layout_field: LayoutInfo, _: usize) -> Result<Self::Layout, ()> {
+                if let LayoutInfo::MatrixArrayField(offset, array_stride, matrix_stride) = layout_field {
                     Ok(MatrixArrayFieldLayout { offset: offset, array_stride: array_stride, matrix_stride: matrix_stride })
                 } else {
                     Err(())
