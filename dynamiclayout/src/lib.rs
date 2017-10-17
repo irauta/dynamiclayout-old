@@ -81,7 +81,7 @@ pub struct FieldSpan {
 }
 
 pub trait DynamicLayout : LayoutDynamicField {
-    fn load_layout(layout_info: &LoadStructLayout) -> Result<<Self as LayoutDynamicField>::Layout, ()>;
+    fn load_layout(layout_info: &LoadStructLayout) -> Result<Self::Layout, ()>;
 }
 
 pub trait LayoutDynamicField {
